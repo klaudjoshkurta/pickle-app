@@ -45,11 +45,13 @@ fun PollCard(
                 .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            StatusIndicator(isOpen = poll.isOpen())
+            StatusIndicator(
+                isOpen = poll.isOpen()
+            )
 
             Text(
                 text = poll.question,
-                style = MaterialTheme.typography.headlineSmall, // 24sp / 32sp line height
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Medium,
             )
 
@@ -112,7 +114,10 @@ private fun PollCardPreview(
     @PreviewParameter(SamplePollProvider::class) poll: Poll,
 ) {
     MaterialTheme {
-        PollCard(poll = poll, modifier = Modifier.padding(16.dp))
+        PollCard(
+            poll = poll,
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }
 
