@@ -1,3 +1,7 @@
 <resources>
     <string name="app_name">Pickle</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_poll">Poll</string>
+    <string name="nav_notifications">Notifications</string>
+    <string name="nav_menu">Menu</string>
 </resources>

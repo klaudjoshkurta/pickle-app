@@ -12,7 +12,10 @@ import androidx.compose.ui.platform.LocalContext
 
 private val DarkColorScheme = darkColorScheme()
 
-private val LightColorScheme = lightColorScheme()
+private val LightColorScheme = lightColorScheme(
+    background = LIGHT_BACKGROUND,
+    onBackground = LIGHT_ON_BACKGROUND,
+)
 
 @Composable
 fun PickleTheme(
