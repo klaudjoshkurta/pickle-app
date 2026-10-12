@@ -15,6 +15,10 @@ private val DarkColorScheme = darkColorScheme()
 private val LightColorScheme = lightColorScheme(
     background = LIGHT_BACKGROUND,
     onBackground = LIGHT_ON_BACKGROUND,
+    surface = LIGHT_SURFACE,
+    onSurface = LIGHT_ON_SURFACE,
+    primary = LIGHT_PRIMARY,
+    onPrimary = LIGHT_ON_PRIMARY,
 )
 
 @Composable
