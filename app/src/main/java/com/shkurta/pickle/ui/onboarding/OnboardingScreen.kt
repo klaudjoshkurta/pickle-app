@@ -1,5 +1,6 @@
 package com.shkurta.pickle.ui.onboarding
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -17,12 +19,14 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.shkurta.pickle.R
 import com.shkurta.pickle.ui.theme.PickleTheme
 
 @Composable
@@ -42,13 +46,14 @@ fun OnboardingScreen(
         ) {
             Spacer(Modifier.weight(1f))
 
-            Text(
-                text = "Pickle",
-                style = MaterialTheme.typography.displayMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
+            Icon(
+                painter = painterResource(R.drawable.pickle_logo),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary
             )
-            Spacer(Modifier.height(8.dp))
+
+            Spacer(Modifier.height(16.dp))
+
             Text(
                 text = "Make group decisions together",
                 style = MaterialTheme.typography.bodyLarge,
@@ -61,8 +66,8 @@ fun OnboardingScreen(
                 onClick = onCreateAccount,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(16.dp),
+                    .height(56.dp),
+                shape = RoundedCornerShape(200.dp),
             ) {
                 Text(
                     text = "Create account",
@@ -77,21 +82,21 @@ fun OnboardingScreen(
                 onClick = onTryIt,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(16.dp),
+                    .height(56.dp),
+                shape = RoundedCornerShape(200.dp),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    containerColor = MaterialTheme.colorScheme.surface,
                     contentColor = MaterialTheme.colorScheme.onSurface,
                 ),
             ) {
                 Text(
-                    text = "Try it",
+                    text = "Try it as a guest",
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold,
                 )
             }
 
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(40.dp))
 
             TextButton(onClick = onLogIn) {
                 Text(
@@ -105,7 +110,7 @@ fun OnboardingScreen(
                 )
             }
 
-            Spacer(Modifier.height(32.dp))
+            Spacer(Modifier.height(24.dp))
         }
     }
 }
