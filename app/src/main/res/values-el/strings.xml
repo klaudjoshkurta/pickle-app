@@ -5,4 +5,5 @@
     <string name="try_it">Δοκιμή ως επισκέπτης</string>
     <string name="already_have_an_account">"Έχετε ήδη λογαριασμό; "</string>
     <string name="log_in">Σύνδεση</string>
+    <string name="back_button_cd">Back</string>
 </resources>

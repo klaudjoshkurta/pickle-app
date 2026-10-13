@@ -1,5 +1,6 @@
 package com.shkurta.pickle.ui.auth
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -14,9 +15,12 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -38,6 +42,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -77,18 +82,18 @@ fun AuthScreen(
         modifier = Modifier.imePadding(),
         topBar = {
             TopAppBar(
-                title = {
-                    Text(
-                        text = if (isSignUp) "Create account" else "Log in",
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                },
+                modifier = Modifier.padding(horizontal = 12.dp),
+                title = {},
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    FilledIconButton(
+                        onClick = onBack,
+                        colors = IconButtonDefaults.outlinedIconButtonColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        ),
+                    ) {
                         Icon(
                             painter = painterResource(R.drawable.ic_arrow_back),
-                            contentDescription = "Back",
+                            contentDescription = stringResource(R.string.back_button_cd),
                         )
                     }
                 },
@@ -109,7 +114,10 @@ fun AuthScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(Modifier.height(32.dp))
-
+            Text(
+                text = "An account keeps your polls, templates and your voting face in one place."
+            )
+            Spacer(Modifier.height(32.dp))
             TextField(
                 value = email,
                 onValueChange = { email = it },
@@ -123,9 +131,7 @@ fun AuthScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isLoading,
             )
-
             Spacer(Modifier.height(12.dp))
-
             TextField(
                 value = password,
                 onValueChange = { password = it },
@@ -141,9 +147,7 @@ fun AuthScreen(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isLoading,
             )
-
             Spacer(Modifier.height(24.dp))
-
             Button(
                 onClick = submit,
                 enabled = !isLoading && email.isNotBlank() && password.isNotBlank(),
@@ -165,9 +169,7 @@ fun AuthScreen(
                     )
                 }
             }
-
             Spacer(Modifier.height(16.dp))
-
             TextButton(
                 onClick = { isSignUp = !isSignUp },
                 enabled = !isLoading,

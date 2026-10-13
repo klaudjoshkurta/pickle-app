@@ -5,4 +5,5 @@
     <string name="try_it">Try it as a guest</string>
     <string name="already_have_an_account">"Already have an account? "</string>
     <string name="log_in">Log in</string>
+    <string name="back_button_cd">Back</string>
 </resources>
