@@ -1,6 +1,5 @@
 package com.shkurta.pickle.ui.onboarding
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -20,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -45,23 +45,18 @@ fun OnboardingScreen(
             verticalArrangement = Arrangement.Center,
         ) {
             Spacer(Modifier.weight(1f))
-
             Icon(
                 painter = painterResource(R.drawable.pickle_logo),
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.primary
             )
-
             Spacer(Modifier.height(16.dp))
-
             Text(
-                text = "Make group decisions together",
+                text = stringResource(R.string.onboarding_description),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-
             Spacer(Modifier.weight(1f))
-
             Button(
                 onClick = onCreateAccount,
                 modifier = Modifier
@@ -70,14 +65,12 @@ fun OnboardingScreen(
                 shape = RoundedCornerShape(200.dp),
             ) {
                 Text(
-                    text = "Create account",
+                    text = stringResource(R.string.create_account),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold,
                 )
             }
-
             Spacer(Modifier.height(12.dp))
-
             Button(
                 onClick = onTryIt,
                 modifier = Modifier
@@ -90,26 +83,23 @@ fun OnboardingScreen(
                 ),
             ) {
                 Text(
-                    text = "Try it as a guest",
+                    text = stringResource(R.string.try_it),
                     style = MaterialTheme.typography.labelLarge,
                     fontWeight = FontWeight.SemiBold,
                 )
             }
-
             Spacer(Modifier.height(40.dp))
-
             TextButton(onClick = onLogIn) {
                 Text(
                     text = buildAnnotatedString {
-                        append("Already have an account? ")
+                        append(stringResource(R.string.already_have_an_account))
                         withStyle(SpanStyle(fontWeight = FontWeight.SemiBold)) {
-                            append("Log in")
+                            append(stringResource(R.string.log_in))
                         }
                     },
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-
             Spacer(Modifier.height(24.dp))
         }
     }

@@ -1,7 +1,8 @@
 <resources>
-    <string name="app_name">Pickle</string>
-    <string name="nav_home">Home</string>
-    <string name="nav_poll">Poll</string>
-    <string name="nav_notifications">Notifications</string>
-    <string name="nav_menu">Menu</string>
+    <string name="app_name" translatable="false">Pickle</string>
+    <string name="onboarding_description">Make group decisions together</string>
+    <string name="create_account">Create account</string>
+    <string name="try_it">Try it as a guest</string>
+    <string name="already_have_an_account">"Already have an account? "</string>
+    <string name="log_in">Log in</string>
 </resources>
