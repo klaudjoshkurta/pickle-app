@@ -58,11 +58,11 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.LaunchedEffect
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.shkurta.pickle.R
 import com.shkurta.pickle.data.MIN_POLL_OPTIONS
-import com.shkurta.pickle.data.PollRepository
 import com.shkurta.pickle.data.distinctOptionTexts
-import com.shkurta.pickle.data.sample.SamplePolls
 import com.shkurta.pickle.domain.model.PollSettings
 import com.shkurta.pickle.ui.theme.PickleTheme
 import java.time.Instant
@@ -76,20 +76,24 @@ private val CardShape = RoundedCornerShape(20.dp)
 fun CreatePollScreen(
     onBack: () -> Unit,
     onCreated: (String) -> Unit,
-    repository: PollRepository = PollRepository.Default,
+    viewModel: CreatePollViewModel = hiltViewModel(),
 ) {
+    LaunchedEffect(Unit) {
+        viewModel.createdPollId.collect { pollId ->
+            onCreated(pollId)
+        }
+    }
+
     CreatePollContent(
         onBack = onBack,
         onCreate = { question, options, settings, deadline, expectedVoters ->
-            val poll = repository.createPoll(
+            viewModel.createPoll(
                 question = question,
                 optionTexts = options,
                 settings = settings,
                 closesAt = deadline.hours?.let { Instant.now().plus(it, ChronoUnit.HOURS) },
                 expectedVoters = expectedVoters,
-                creatorId = SamplePolls.CREATOR_ID,
             )
-            if (poll != null) onCreated(poll.id)
         },
     )
 }

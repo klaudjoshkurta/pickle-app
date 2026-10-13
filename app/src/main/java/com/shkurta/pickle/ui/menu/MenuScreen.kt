@@ -39,10 +39,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.shkurta.pickle.R
-import com.shkurta.pickle.data.NotificationRepository
-import com.shkurta.pickle.data.PollRepository
-import com.shkurta.pickle.data.sample.SamplePolls
 import com.shkurta.pickle.ui.theme.PickleTheme
 
 private val CardShape = RoundedCornerShape(20.dp)
@@ -53,11 +51,11 @@ fun MenuScreen(
     onBack: () -> Unit,
     onCreatePollClick: () -> Unit,
     onNotificationsClick: () -> Unit,
-    pollRepository: PollRepository = PollRepository.Default,
-    notificationRepository: NotificationRepository = NotificationRepository.Default,
+    onSignedOut: () -> Unit = {},
+    viewModel: MenuViewModel = hiltViewModel(),
 ) {
-    val polls by pollRepository.polls.collectAsState()
-    val notifications by notificationRepository.notifications.collectAsState()
+    val polls by viewModel.polls.collectAsState()
+    val notifications by viewModel.notifications.collectAsState()
     val context = LocalContext.current
     val versionName = remember {
         runCatching {
@@ -65,7 +63,7 @@ fun MenuScreen(
         }.getOrNull()
     }
 
-    val myPolls = polls.filter { it.isCreator(SamplePolls.CREATOR_ID) }
+    val myPolls = polls.filter { it.isCreator(viewModel.currentUserId) }
 
     MenuContent(
         createdCount = myPolls.size,
@@ -77,6 +75,10 @@ fun MenuScreen(
         onCreatePollClick = onCreatePollClick,
         onNotificationsClick = onNotificationsClick,
         onShareAppClick = { shareApp(context) },
+        onSignOut = {
+            viewModel.signOut()
+            onSignedOut()
+        },
     )
 }
 
@@ -91,6 +93,7 @@ private fun MenuContent(
     onCreatePollClick: () -> Unit,
     onNotificationsClick: () -> Unit,
     onShareAppClick: () -> Unit,
+    onSignOut: () -> Unit = {},
 ) {
     Scaffold(
         topBar = { MenuTopBar(onBack = onBack) },
@@ -159,6 +162,12 @@ private fun MenuContent(
                             trailing = versionName,
                         )
                     }
+                    CardDivider()
+                    MenuRow(
+                        iconRes = R.drawable.ic_close,
+                        label = "Sign out",
+                        onClick = onSignOut,
+                    )
                 }
             }
         }

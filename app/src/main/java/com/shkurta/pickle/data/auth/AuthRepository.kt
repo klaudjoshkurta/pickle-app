@@ -1,0 +1,12 @@
+package com.shkurta.pickle.data.auth
+
+import kotlinx.coroutines.flow.StateFlow
+
+interface AuthRepository {
+    val currentUserId: String?
+    val isAuthenticated: StateFlow<Boolean>
+
+    suspend fun signUp(email: String, password: String): Result<Unit>
+    suspend fun signIn(email: String, password: String): Result<Unit>
+    suspend fun signOut()
+}

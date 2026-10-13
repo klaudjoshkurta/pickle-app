@@ -39,8 +39,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.shkurta.pickle.R
-import com.shkurta.pickle.data.NotificationRepository
 import com.shkurta.pickle.data.sample.SampleNotifications
 import com.shkurta.pickle.domain.model.NotificationType
 import com.shkurta.pickle.domain.model.PollNotification
@@ -56,16 +56,16 @@ import java.time.ZoneId
 fun NotificationsScreen(
     onBack: () -> Unit,
     onPollClick: (String) -> Unit,
-    repository: NotificationRepository = NotificationRepository.Default,
+    viewModel: NotificationsViewModel = hiltViewModel(),
 ) {
-    val notifications by repository.notifications.collectAsState()
+    val notifications by viewModel.notifications.collectAsState()
 
     NotificationsContent(
         notifications = notifications,
         onBack = onBack,
-        onMarkAllRead = { repository.markAllRead() },
+        onMarkAllRead = { viewModel.markAllRead() },
         onNotificationClick = { notification ->
-            repository.markRead(notification.id)
+            viewModel.markRead(notification.id)
             onPollClick(notification.pollId)
         },
     )

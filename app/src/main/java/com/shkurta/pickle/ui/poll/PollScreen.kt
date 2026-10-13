@@ -64,8 +64,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.shkurta.pickle.R
-import com.shkurta.pickle.data.PollRepository
 import com.shkurta.pickle.data.sample.SamplePolls
 import com.shkurta.pickle.domain.model.OptionResult
 import com.shkurta.pickle.domain.model.OptionStatus
@@ -85,15 +85,13 @@ private val CardShape = RoundedCornerShape(20.dp)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun PollScreen(
-    pollId: String,
     onBack: () -> Unit,
-    repository: PollRepository = PollRepository.Default,
+    viewModel: PollViewModel = hiltViewModel(),
 ) {
-    val polls by repository.polls.collectAsState()
-    val myVotes by repository.myVotes.collectAsState()
-    val poll = polls.firstOrNull { it.id == pollId }
+    val poll by viewModel.poll.collectAsState()
+    val myVotes by viewModel.myVotes.collectAsState()
+    val lastSuggestionStatus by viewModel.lastSuggestionStatus.collectAsState()
     val context = LocalContext.current
-    val currentUserId = SamplePolls.CREATOR_ID
 
     if (poll == null) {
         PollNotFound(onBack = onBack)
@@ -101,15 +99,19 @@ fun PollScreen(
     }
 
     PollContent(
-        poll = poll,
-        currentUserId = currentUserId,
-        myVoteOptionId = myVotes[pollId],
+        poll = poll!!,
+        currentUserId = viewModel.currentUserId,
+        myVoteOptionId = myVotes[poll!!.id],
+        lastSuggestionStatus = lastSuggestionStatus,
         onBack = onBack,
-        onShare = { sharePoll(context, poll) },
-        onVote = { optionId -> repository.vote(pollId, optionId) },
-        onSuggest = { text -> repository.suggestOption(pollId, text, currentUserId) },
-        onModerate = { optionId, approve -> repository.moderate(pollId, optionId, approve) },
-        onClose = { repository.close(pollId) },
+        onShare = { sharePoll(context, poll!!) },
+        onVote = { optionId -> viewModel.vote(optionId) },
+        onSuggest = { text ->
+            viewModel.suggestOption(text)
+        },
+        onClearSuggestionStatus = { viewModel.clearSuggestionStatus() },
+        onModerate = { optionId, approve -> viewModel.moderate(optionId, approve) },
+        onClose = { viewModel.close() },
     )
 }
 
@@ -119,10 +121,12 @@ private fun PollContent(
     poll: Poll,
     currentUserId: String,
     myVoteOptionId: String?,
+    lastSuggestionStatus: OptionStatus?,
     onBack: () -> Unit,
     onShare: () -> Unit,
     onVote: (String) -> Unit,
-    onSuggest: (String) -> OptionStatus?,
+    onSuggest: (String) -> Unit,
+    onClearSuggestionStatus: () -> Unit,
     onModerate: (optionId: String, approve: Boolean) -> Unit,
     onClose: () -> Unit,
 ) {
@@ -214,7 +218,11 @@ private fun PollContent(
 
             if (isOpen && poll.settings.allowSuggestions) {
                 item(key = "suggest") {
-                    SuggestOption(onSuggest = onSuggest)
+                    SuggestOption(
+                        lastSuggestionStatus = lastSuggestionStatus,
+                        onSuggest = onSuggest,
+                        onClearStatus = onClearSuggestionStatus,
+                    )
                 }
             }
 
@@ -554,16 +562,17 @@ private fun SelectionDot(
 
 @Composable
 private fun SuggestOption(
-    onSuggest: (String) -> OptionStatus?,
+    lastSuggestionStatus: OptionStatus?,
+    onSuggest: (String) -> Unit,
+    onClearStatus: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var text by rememberSaveable { mutableStateOf("") }
-    var sentForApproval by rememberSaveable { mutableStateOf(false) }
+    val sentForApproval = lastSuggestionStatus == OptionStatus.PENDING
     val submit = {
-        val status = onSuggest(text)
-        if (status != null) {
+        if (text.isNotBlank()) {
+            onSuggest(text)
             text = ""
-            sentForApproval = status == OptionStatus.PENDING
         }
     }
 
@@ -581,7 +590,7 @@ private fun SuggestOption(
                     value = text,
                     onValueChange = {
                         text = it
-                        sentForApproval = false
+                        onClearStatus()
                     },
                     placeholder = { Text("Suggest an option") },
                     singleLine = true,
@@ -757,10 +766,12 @@ private fun PollContentPreview(
             poll = poll,
             currentUserId = SamplePolls.CREATOR_ID,
             myVoteOptionId = null,
+            lastSuggestionStatus = null,
             onBack = {},
             onShare = {},
             onVote = {},
-            onSuggest = { null },
+            onSuggest = {},
+            onClearSuggestionStatus = {},
             onModerate = { _, _ -> },
             onClose = {},
         )

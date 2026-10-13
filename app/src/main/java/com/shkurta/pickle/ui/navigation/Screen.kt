@@ -6,6 +6,12 @@ import kotlinx.serialization.Serializable
 sealed interface
 Screen {
     @Serializable
+    data object Onboarding : Screen
+
+    @Serializable
+    data class Auth(val signUp: Boolean = false) : Screen
+
+    @Serializable
     data object Home : Screen
 
     @Serializable

@@ -28,9 +28,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.shkurta.pickle.R
-import com.shkurta.pickle.data.NotificationRepository
-import com.shkurta.pickle.data.PollRepository
 import com.shkurta.pickle.ui.components.PollCard
 import com.shkurta.pickle.ui.components.SegmentedToggle
 
@@ -41,10 +40,11 @@ fun HomeScreen(
     onCreateClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
     onMenuClick: () -> Unit = {},
+    viewModel: HomeViewModel = hiltViewModel(),
 ) {
     var filter by rememberSaveable { mutableStateOf(HomeFilter.MY_POLLS) }
-    val allPolls by PollRepository.Default.polls.collectAsState()
-    val notifications by NotificationRepository.Default.notifications.collectAsState()
+    val allPolls by viewModel.polls.collectAsState()
+    val notifications by viewModel.notifications.collectAsState()
     val polls = remember(filter, allPolls) {
         allPolls.filter { poll ->
             when (filter) {
