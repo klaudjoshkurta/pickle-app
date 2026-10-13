@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Badge
+import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
@@ -27,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.shkurta.pickle.R
+import com.shkurta.pickle.data.NotificationRepository
 import com.shkurta.pickle.data.PollRepository
 import com.shkurta.pickle.ui.components.PollCard
 import com.shkurta.pickle.ui.components.SegmentedToggle
@@ -36,9 +39,11 @@ import com.shkurta.pickle.ui.components.SegmentedToggle
 fun HomeScreen(
     onPollClick: (String) -> Unit = {},
     onCreateClick: () -> Unit = {},
+    onNotificationsClick: () -> Unit = {},
 ) {
     var filter by rememberSaveable { mutableStateOf(HomeFilter.MY_POLLS) }
     val allPolls by PollRepository.Default.polls.collectAsState()
+    val notifications by NotificationRepository.Default.notifications.collectAsState()
     val polls = remember(filter, allPolls) {
         allPolls.filter { poll ->
             when (filter) {
@@ -49,7 +54,12 @@ fun HomeScreen(
     }
 
     Scaffold(
-        topBar = { HomeTopBar() },
+        topBar = {
+            HomeTopBar(
+                hasUnreadNotifications = notifications.any { !it.isRead },
+                onNotificationsClick = onNotificationsClick
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onCreateClick,
@@ -104,19 +114,29 @@ private enum class HomeFilter(val label: String) {
 
 @Composable
 fun HomeTopBar(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    hasUnreadNotifications: Boolean = false,
+    onNotificationsClick: () -> Unit = {},
 ) {
     TopAppBar(
         modifier = modifier,
         title = {},
         actions = {
             IconButton(
-                onClick = {}
+                onClick = onNotificationsClick
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_bell),
-                    contentDescription = null
-                )
+                BadgedBox(
+                    badge = {
+                        if (hasUnreadNotifications) {
+                            Badge(containerColor = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_bell),
+                        contentDescription = null
+                    )
+                }
             }
             IconButton(
                 onClick = {}

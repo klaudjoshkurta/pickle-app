@@ -3,6 +3,7 @@ package com.shkurta.pickle.data
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.shkurta.pickle.data.sample.SamplePolls
+import com.shkurta.pickle.domain.model.NotificationType
 import com.shkurta.pickle.domain.model.OptionStatus
 import com.shkurta.pickle.domain.model.Outcome
 import com.shkurta.pickle.domain.model.Poll
@@ -26,7 +27,10 @@ internal fun distinctOptionTexts(texts: List<String>): List<String> =
         .distinctBy { it.lowercase() }
 
 /** In-memory poll store. State is lost when the process dies. */
-class PollRepository(initialPolls: List<Poll>) {
+class PollRepository(
+    initialPolls: List<Poll>,
+    private val notifications: NotificationRepository? = null,
+) {
 
     private val _polls = MutableStateFlow(initialPolls)
     val polls: StateFlow<List<Poll>> = _polls.asStateFlow()
@@ -69,6 +73,7 @@ class PollRepository(initialPolls: List<Poll>) {
             expectedVoters = expectedVoters?.takeIf { it > 0 },
         )
         _polls.update { listOf(poll) + it }
+        notifications?.add(NotificationType.POLL_CREATED, poll)
         return poll
     }
 
@@ -122,36 +127,55 @@ class PollRepository(initialPolls: List<Poll>) {
             createdAt = Instant.now(),
         )
         updatePoll(pollId) { it.copy(options = it.options + option) }
+        if (status == OptionStatus.PENDING) {
+            notifications?.add(NotificationType.SUGGESTION_RECEIVED, poll, trimmed)
+        }
         return status
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun moderate(pollId: String, optionId: String, approve: Boolean) {
-        openPoll(pollId) ?: return
+        val poll = openPoll(pollId) ?: return
+        val suggestion = poll.pendingSuggestions.firstOrNull { it.id == optionId } ?: return
         val newStatus = if (approve) OptionStatus.APPROVED else OptionStatus.REJECTED
         updatePoll(pollId) {
             it.copy(
                 options = it.options.map { option ->
-                    if (option.id == optionId && option.status == OptionStatus.PENDING) {
-                        option.copy(status = newStatus)
-                    } else {
-                        option
-                    }
+                    if (option.id == optionId) option.copy(status = newStatus) else option
                 },
             )
         }
+        notifications?.add(
+            type = if (approve) {
+                NotificationType.SUGGESTION_APPROVED
+            } else {
+                NotificationType.SUGGESTION_REJECTED
+            },
+            poll = poll,
+            detail = suggestion.text,
+        )
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun close(pollId: String) {
-        openPoll(pollId) ?: return
+        val poll = openPoll(pollId) ?: return
+        val outcome = poll.toResults().outcome
         updatePoll(pollId) {
             it.copy(
                 status = PollStatus.CLOSED,
                 closedAt = Instant.now(),
-                winnerOptionId = (it.toResults().outcome as? Outcome.Winner)?.option?.id,
+                winnerOptionId = (outcome as? Outcome.Winner)?.option?.id,
             )
         }
+        notifications?.add(
+            type = NotificationType.POLL_CLOSED,
+            poll = poll,
+            detail = when (outcome) {
+                Outcome.NoVotes -> "No votes"
+                is Outcome.Winner -> "Winner: ${outcome.option.text}"
+                is Outcome.Tie -> "Tie: ${outcome.options.joinToString(" · ") { it.text }}"
+            },
+        )
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
@@ -164,6 +188,8 @@ class PollRepository(initialPolls: List<Poll>) {
 
     companion object {
         @get:RequiresApi(Build.VERSION_CODES.O)
-        val Default: PollRepository by lazy { PollRepository(SamplePolls.all) }
+        val Default: PollRepository by lazy {
+            PollRepository(SamplePolls.all, NotificationRepository.Default)
+        }
     }
 }

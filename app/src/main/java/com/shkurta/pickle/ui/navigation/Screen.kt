@@ -3,7 +3,8 @@ package com.shkurta.pickle.ui.navigation
 import kotlinx.serialization.Serializable
 
 @Serializable
-sealed interface Screen {
+sealed interface
+Screen {
     @Serializable
     data object Home : Screen
 

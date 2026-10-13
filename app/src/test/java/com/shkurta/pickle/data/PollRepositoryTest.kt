@@ -1,6 +1,7 @@
 package com.shkurta.pickle.data
 
 import com.shkurta.pickle.data.sample.SamplePolls
+import com.shkurta.pickle.domain.model.NotificationType
 import com.shkurta.pickle.domain.model.OptionStatus
 import com.shkurta.pickle.domain.model.Poll
 import com.shkurta.pickle.domain.model.PollSettings
@@ -69,6 +70,61 @@ class PollRepositoryTest {
 
         assertNull(created.expectedVoters)
         assertNull(created.closedAt)
+    }
+
+    @Test
+    fun notifications_emittedForCreateSuggestModerateAndClose() {
+        val notifications = NotificationRepository(emptyList())
+        val repository = PollRepository(SamplePolls.all, notifications)
+
+        repository.createPoll(
+            "Lunch?", listOf("A", "B"), PollSettings(), null, null, SamplePolls.CREATOR_ID,
+        )
+        repository.suggestOption("poll_1", "Pasta", "user_guest_2")
+        repository.moderate("poll_1", "opt_1_4", approve = true)
+        repository.close("poll_1")
+        repository.close("poll_3")
+
+        val emitted = notifications.notifications.value.reversed()
+        assertEquals(
+            listOf(
+                NotificationType.POLL_CREATED to null,
+                NotificationType.SUGGESTION_RECEIVED to "Pasta",
+                NotificationType.SUGGESTION_APPROVED to "Tacos",
+                NotificationType.POLL_CLOSED to "Winner: Pizza",
+                NotificationType.POLL_CLOSED to "No votes",
+            ),
+            emitted.map { it.type to it.detail },
+        )
+        assertEquals("Lunch?", emitted.first().pollQuestion)
+        assertEquals("poll_1", emitted[1].pollId)
+    }
+
+    @Test
+    fun notifications_notEmittedForVotesOrIgnoredActions() {
+        val notifications = NotificationRepository(emptyList())
+        val repository = PollRepository(SamplePolls.all, notifications)
+
+        repository.vote("poll_1", "opt_1_2")
+        repository.createPoll(" ", listOf("A", "B"), PollSettings(), null, null, SamplePolls.CREATOR_ID)
+        repository.suggestOption("poll_1", "Pasta", SamplePolls.CREATOR_ID)
+        repository.suggestOption("poll_1", "pizza", "user_guest_2")
+        repository.moderate("poll_1", "opt_1_1", approve = false)
+        repository.close("poll_2")
+
+        assertTrue(notifications.notifications.value.isEmpty())
+    }
+
+    @Test
+    fun notifications_rejectedSuggestion() {
+        val notifications = NotificationRepository(emptyList())
+        val repository = PollRepository(SamplePolls.all, notifications)
+
+        repository.moderate("poll_1", "opt_1_4", approve = false)
+
+        val emitted = notifications.notifications.value.single()
+        assertEquals(NotificationType.SUGGESTION_REJECTED, emitted.type)
+        assertEquals("Tacos", emitted.detail)
     }
 
     @Test
