@@ -1,19 +1,14 @@
 package com.shkurta.pickle.ui.components
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
@@ -44,68 +39,52 @@ fun <T> SegmentedToggle(
 ) {
     val selectedIndex = options.indexOf(selected).coerceAtLeast(0)
 
-    BoxWithConstraints(
+    Row(
         modifier = modifier
-            .fillMaxWidth()
-            .height(44.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant)
-            .padding(4.dp),
+            .height(48.dp)
+            .selectableGroup(),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        val segmentWidth = maxWidth / options.size.coerceAtLeast(1)
-        val pillOffset by animateDpAsState(
-            targetValue = segmentWidth * selectedIndex,
-            animationSpec = tween(250),
-            label = "pill",
-        )
+        options.forEachIndexed { index, option ->
+            val isSelected = index == selectedIndex
+            val pillColor by animateColorAsState(
+                targetValue = MaterialTheme.colorScheme.surfaceVariant.copy(
+                    alpha = if (isSelected) 1f else 0f,
+                ),
+                animationSpec = tween(250),
+                label = "pill",
+            )
+            val textColor by animateColorAsState(
+                targetValue = if (isSelected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f)
+                },
+                animationSpec = tween(250),
+                label = "label",
+            )
 
-        Box(
-            modifier = Modifier
-                .offset(x = pillOffset)
-                .width(segmentWidth)
-                .fillMaxHeight()
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surface),
-        )
-
-        Row(
-            modifier = Modifier
-                .fillMaxSize()
-                .selectableGroup(),
-        ) {
-            options.forEachIndexed { index, option ->
-                val isSelected = index == selectedIndex
-                val textColor by animateColorAsState(
-                    targetValue = if (isSelected) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f)
-                    },
-                    animationSpec = tween(250),
-                    label = "label",
-                )
-
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .clip(CircleShape)
-                        .selectable(
-                            selected = isSelected,
-                            role = Role.Tab,
-                            onClick = { onSelect(option) },
-                        ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = label(option),
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                        color = textColor,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .clip(CircleShape)
+                    .background(pillColor)
+                    .selectable(
+                        selected = isSelected,
+                        role = Role.Tab,
+                        onClick = { onSelect(option) },
                     )
-                }
+                    .padding(horizontal = 16.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = label(option),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.SemiBold,
+                    color = textColor,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
             }
         }
     }
