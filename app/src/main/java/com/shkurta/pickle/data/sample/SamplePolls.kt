@@ -14,7 +14,7 @@ object SamplePolls {
 
     @RequiresApi(Build.VERSION_CODES.O)
     private val now: Instant = Instant.now()
-    private const val CREATOR_ID = "user_creator"
+    const val CREATOR_ID = "user_creator"
 
     // 1. Has votes – clear winner (Pizza), plus a pending suggestion to moderate
     @RequiresApi(Build.VERSION_CODES.O)

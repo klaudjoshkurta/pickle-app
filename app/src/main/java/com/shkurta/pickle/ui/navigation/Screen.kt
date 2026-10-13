@@ -8,7 +8,7 @@ sealed interface Screen {
     data object Home : Screen
 
     @Serializable
-    data object Poll : Screen
+    data class Poll(val pollId: String) : Screen
 
     @Serializable
     data object Notifications : Screen

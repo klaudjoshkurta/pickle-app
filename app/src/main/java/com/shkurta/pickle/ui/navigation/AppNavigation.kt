@@ -5,7 +5,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import com.shkurta.pickle.ui.home.HomeScreen
+import com.shkurta.pickle.ui.poll.PollScreen
 
 @Composable
 fun AppNavigation(
@@ -16,10 +18,16 @@ fun AppNavigation(
         startDestination = Screen.Home,
     ) {
         composable<Screen.Home> {
-            HomeScreen()
+            HomeScreen(
+                onPollClick = { pollId -> navController.navigate(Screen.Poll(pollId)) }
+            )
         }
-        composable<Screen.Poll> {
-
+        composable<Screen.Poll> { backStackEntry ->
+            val route = backStackEntry.toRoute<Screen.Poll>()
+            PollScreen(
+                pollId = route.pollId,
+                onBack = { navController.popBackStack() }
+            )
         }
         composable<Screen.Notifications> {
 

@@ -46,7 +46,7 @@ import com.shkurta.pickle.ui.theme.PickleTheme
 import java.time.Duration
 import java.time.Instant
 
-private val ClosedColor = Color(0xFF8C7A60)
+internal val ClosedColor = Color(0xFF8C7A60)
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -183,7 +183,7 @@ fun PollCard(
 }
 
 @Composable
-private fun StatusChip(
+internal fun StatusChip(
     isOpen: Boolean,
     modifier: Modifier = Modifier,
 ) {
@@ -220,7 +220,7 @@ private fun StatusChip(
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-private fun timeLabel(poll: Poll, now: Instant = Instant.now()): String? {
+internal fun timeLabel(poll: Poll, now: Instant = Instant.now()): String? {
     val closedAt = poll.closedAt ?: return null
     val duration = if (poll.isOpen(now)) {
         Duration.between(now, closedAt)
@@ -238,7 +238,7 @@ private fun timeLabel(poll: Poll, now: Instant = Instant.now()): String? {
     return if (poll.isOpen(now)) "Ends in $label" else "Closed $label ago"
 }
 
-private fun voteSummary(poll: Poll): String {
+internal fun voteSummary(poll: Poll): String {
     val votes = poll.totalVotes
     return when {
         poll.expectedVoters != null -> "$votes of ${poll.expectedVoters} voted"

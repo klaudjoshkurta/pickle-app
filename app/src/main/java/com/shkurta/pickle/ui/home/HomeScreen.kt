@@ -17,6 +17,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -26,16 +27,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.shkurta.pickle.R
-import com.shkurta.pickle.data.sample.SamplePolls
+import com.shkurta.pickle.data.PollRepository
 import com.shkurta.pickle.ui.components.PollCard
 import com.shkurta.pickle.ui.components.SegmentedToggle
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun HomeScreen() {
+fun HomeScreen(
+    onPollClick: (String) -> Unit = {},
+) {
     var filter by rememberSaveable { mutableStateOf(HomeFilter.MY_POLLS) }
-    val polls = remember(filter) {
-        SamplePolls.all.filter { poll ->
+    val allPolls by PollRepository.Default.polls.collectAsState()
+    val polls = remember(filter, allPolls) {
+        allPolls.filter { poll ->
             when (filter) {
                 HomeFilter.MY_POLLS -> poll.isOpen()
                 HomeFilter.CLOSED -> !poll.isOpen()
@@ -83,7 +87,8 @@ fun HomeScreen() {
                     key = { it.id }
                 ) { poll ->
                     PollCard(
-                        poll = poll
+                        poll = poll,
+                        onClick = { onPollClick(poll.id) }
                     )
                 }
             }
