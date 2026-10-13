@@ -7,6 +7,7 @@ import com.shkurta.pickle.domain.model.OptionStatus
 import com.shkurta.pickle.domain.model.Outcome
 import com.shkurta.pickle.domain.model.Poll
 import com.shkurta.pickle.domain.model.PollOption
+import com.shkurta.pickle.domain.model.PollSettings
 import com.shkurta.pickle.domain.model.PollStatus
 import com.shkurta.pickle.domain.model.toResults
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,6 +16,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.time.Instant
 import java.util.UUID
+
+internal const val MIN_POLL_OPTIONS = 2
+
+/** Trimmed, non-blank option texts with case-insensitive duplicates removed. */
+internal fun distinctOptionTexts(texts: List<String>): List<String> =
+    texts.map { it.trim() }
+        .filter { it.isNotEmpty() }
+        .distinctBy { it.lowercase() }
 
 /** In-memory poll store. State is lost when the process dies. */
 class PollRepository(initialPolls: List<Poll>) {
@@ -25,6 +34,43 @@ class PollRepository(initialPolls: List<Poll>) {
     /** pollId -> optionId the current user voted for. */
     private val _myVotes = MutableStateFlow<Map<String, String>>(emptyMap())
     val myVotes: StateFlow<Map<String, String>> = _myVotes.asStateFlow()
+
+    /** Returns the created poll, or null when the question is blank or too few options remain. */
+    @RequiresApi(Build.VERSION_CODES.O)
+    fun createPoll(
+        question: String,
+        optionTexts: List<String>,
+        settings: PollSettings,
+        closesAt: Instant?,
+        expectedVoters: Int?,
+        creatorId: String,
+    ): Poll? {
+        val trimmedQuestion = question.trim()
+        val texts = distinctOptionTexts(optionTexts)
+        if (trimmedQuestion.isEmpty() || texts.size < MIN_POLL_OPTIONS) return null
+
+        val now = Instant.now()
+        val poll = Poll(
+            id = "poll_${UUID.randomUUID()}",
+            question = trimmedQuestion,
+            creatorId = creatorId,
+            options = texts.map { text ->
+                PollOption(
+                    id = "opt_${UUID.randomUUID()}",
+                    text = text,
+                    status = OptionStatus.APPROVED,
+                    createdAt = now,
+                )
+            },
+            settings = settings,
+            status = PollStatus.OPEN,
+            createdAt = now,
+            closedAt = closesAt,
+            expectedVoters = expectedVoters?.takeIf { it > 0 },
+        )
+        _polls.update { listOf(poll) + it }
+        return poll
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     fun vote(pollId: String, optionId: String) {

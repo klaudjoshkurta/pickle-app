@@ -35,6 +35,7 @@ import com.shkurta.pickle.ui.components.SegmentedToggle
 @Composable
 fun HomeScreen(
     onPollClick: (String) -> Unit = {},
+    onCreateClick: () -> Unit = {},
 ) {
     var filter by rememberSaveable { mutableStateOf(HomeFilter.MY_POLLS) }
     val allPolls by PollRepository.Default.polls.collectAsState()
@@ -51,7 +52,7 @@ fun HomeScreen(
         topBar = { HomeTopBar() },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = {},
+                onClick = onCreateClick,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
                 elevation = FloatingActionButtonDefaults.elevation(

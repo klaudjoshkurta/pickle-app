@@ -3,12 +3,15 @@ package com.shkurta.pickle.data
 import com.shkurta.pickle.data.sample.SamplePolls
 import com.shkurta.pickle.domain.model.OptionStatus
 import com.shkurta.pickle.domain.model.Poll
+import com.shkurta.pickle.domain.model.PollSettings
 import com.shkurta.pickle.domain.model.PollStatus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.time.Instant
+import java.time.temporal.ChronoUnit
 
 class PollRepositoryTest {
 
@@ -18,6 +21,55 @@ class PollRepositoryTest {
 
     private fun votes(pollId: String, optionId: String): Int =
         poll(pollId).options.first { it.id == optionId }.voteCount
+
+    @Test
+    fun createPoll_prependsOpenPollWithCleanedInput() {
+        val closesAt = Instant.now().plus(1, ChronoUnit.DAYS)
+        val settings = PollSettings(allowSuggestions = true, allowVoteChange = false)
+
+        val created = repository.createPoll(
+            question = "  Lunch?  ",
+            optionTexts = listOf(" Gyros ", "", "gyros", "Salad"),
+            settings = settings,
+            closesAt = closesAt,
+            expectedVoters = 5,
+            creatorId = SamplePolls.CREATOR_ID,
+        )!!
+
+        assertEquals(created, repository.polls.value.first())
+        assertEquals(4, repository.polls.value.size)
+        assertEquals("Lunch?", created.question)
+        assertEquals(listOf("Gyros", "Salad"), created.approvedOptions.map { it.text })
+        assertEquals(settings, created.settings)
+        assertEquals(closesAt, created.closedAt)
+        assertEquals(5, created.expectedVoters)
+        assertTrue(created.isOpen())
+        assertTrue(created.isCreator(SamplePolls.CREATOR_ID))
+    }
+
+    @Test
+    fun createPoll_rejectsBlankQuestionAndTooFewOptions() {
+        val blankQuestion = repository.createPoll(
+            " ", listOf("A", "B"), PollSettings(), null, null, SamplePolls.CREATOR_ID,
+        )
+        val oneDistinctOption = repository.createPoll(
+            "Lunch?", listOf("A", "a ", ""), PollSettings(), null, null, SamplePolls.CREATOR_ID,
+        )
+
+        assertNull(blankQuestion)
+        assertNull(oneDistinctOption)
+        assertEquals(3, repository.polls.value.size)
+    }
+
+    @Test
+    fun createPoll_zeroExpectedVotersIsUnknown() {
+        val created = repository.createPoll(
+            "Lunch?", listOf("A", "B"), PollSettings(), null, 0, SamplePolls.CREATOR_ID,
+        )!!
+
+        assertNull(created.expectedVoters)
+        assertNull(created.closedAt)
+    }
 
     @Test
     fun vote_incrementsOptionAndRecordsMyVote() {

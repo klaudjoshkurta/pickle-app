@@ -11,6 +11,9 @@ sealed interface Screen {
     data class Poll(val pollId: String) : Screen
 
     @Serializable
+    data object CreatePoll : Screen
+
+    @Serializable
     data object Notifications : Screen
 
     @Serializable
