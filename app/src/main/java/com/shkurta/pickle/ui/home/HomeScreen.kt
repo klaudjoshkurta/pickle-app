@@ -40,6 +40,7 @@ fun HomeScreen(
     onPollClick: (String) -> Unit = {},
     onCreateClick: () -> Unit = {},
     onNotificationsClick: () -> Unit = {},
+    onMenuClick: () -> Unit = {},
 ) {
     var filter by rememberSaveable { mutableStateOf(HomeFilter.MY_POLLS) }
     val allPolls by PollRepository.Default.polls.collectAsState()
@@ -57,7 +58,8 @@ fun HomeScreen(
         topBar = {
             HomeTopBar(
                 hasUnreadNotifications = notifications.any { !it.isRead },
-                onNotificationsClick = onNotificationsClick
+                onNotificationsClick = onNotificationsClick,
+                onMenuClick = onMenuClick
             )
         },
         floatingActionButton = {
@@ -117,6 +119,7 @@ fun HomeTopBar(
     modifier: Modifier = Modifier,
     hasUnreadNotifications: Boolean = false,
     onNotificationsClick: () -> Unit = {},
+    onMenuClick: () -> Unit = {},
 ) {
     TopAppBar(
         modifier = modifier,
@@ -139,7 +142,7 @@ fun HomeTopBar(
                 }
             }
             IconButton(
-                onClick = {}
+                onClick = onMenuClick
             ) {
                 Icon(
                     painter = painterResource(R.drawable.ic_menu),
