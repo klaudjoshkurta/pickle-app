@@ -1,7 +1,5 @@
 package com.shkurta.pickle.ui.home
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -21,12 +19,8 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -48,7 +42,6 @@ import com.shkurta.pickle.ui.components.sharePoll
 import com.shkurta.pickle.ui.theme.Pickle
 import java.time.LocalTime
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun HomeScreen(
     onPollClick: (String) -> Unit = {},
@@ -57,26 +50,37 @@ fun HomeScreen(
     onMenuClick: () -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
-    var filter by rememberSaveable { mutableStateOf(HomeFilter.MY_POLLS) }
-    val allPolls by viewModel.polls.collectAsState()
-    val notifications by viewModel.notifications.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    HomeContent(
+        state = state,
+        onFilterChange = viewModel::selectFilter,
+        onPollClick = onPollClick,
+        onCreateClick = onCreateClick,
+        onNotificationsClick = onNotificationsClick,
+        onMenuClick = onMenuClick,
+    )
+}
+
+@Composable
+private fun HomeContent(
+    state: HomeUiState,
+    onFilterChange: (HomeFilter) -> Unit,
+    onPollClick: (String) -> Unit,
+    onCreateClick: () -> Unit,
+    onNotificationsClick: () -> Unit,
+    onMenuClick: () -> Unit,
+) {
+    val filter = state.filter
+    val polls = state.polls
     val context = LocalContext.current
-    val polls = remember(filter, allPolls) {
-        allPolls.filter { poll ->
-            when (filter) {
-                HomeFilter.MY_POLLS -> poll.isOpen()
-                HomeFilter.CLOSED -> !poll.isOpen()
-            }
-        }
-    }
 
     Scaffold(
         containerColor = Pickle.colors.canvas,
         topBar = {
             HomeTopBar(
-                avatarUrl = viewModel.avatarUrl,
-                displayName = viewModel.displayName,
-                hasUnreadNotifications = notifications.any { !it.isRead },
+                avatarUrl = state.avatarUrl,
+                displayName = state.displayName,
+                hasUnreadNotifications = state.hasUnreadNotifications,
                 onCreateClick = onCreateClick,
                 onNotificationsClick = onNotificationsClick,
                 onMenuClick = onMenuClick,
@@ -90,12 +94,12 @@ fun HomeScreen(
         ) {
             item(key = "greeting") {
                 Column {
-                    PickleHeadline(text = greeting(viewModel.displayName))
+                    PickleHeadline(text = greeting(state.displayName))
                     Spacer(Modifier.height(14.dp))
                     SegmentedToggle(
                         options = HomeFilter.entries,
                         selected = filter,
-                        onSelect = { filter = it },
+                        onSelect = onFilterChange,
                         label = { it.label },
                     )
                     if (polls.isNotEmpty()) {
@@ -127,12 +131,6 @@ fun HomeScreen(
     }
 }
 
-private enum class HomeFilter(val label: String, val sectionLabel: String) {
-    MY_POLLS("My polls", "Live now"),
-    CLOSED("Closed", "Settled"),
-}
-
-@RequiresApi(Build.VERSION_CODES.O)
 private fun greeting(name: String?): String {
     val hour = LocalTime.now().hour
     val partOfDay = when (hour) {

@@ -1,4 +1,4 @@
-package com.shkurta.pickle.data.auth
+package com.shkurta.pickle.domain.repository
 
 import kotlinx.coroutines.flow.StateFlow
 

@@ -1,5 +1,7 @@
 package com.shkurta.pickle.data.auth
 
+import com.shkurta.pickle.domain.repository.AuthRepository
+
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.providers.builtin.Email
 import io.github.jan.supabase.auth.status.SessionStatus

@@ -2,7 +2,7 @@ package com.shkurta.pickle.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -25,7 +25,7 @@ fun AppNavigation(
     navController: NavHostController = rememberNavController(),
     authViewModel: AuthViewModel = hiltViewModel(),
 ) {
-    val isAuthenticated by authViewModel.isAuthenticated.collectAsState()
+    val isAuthenticated by authViewModel.isAuthenticated.collectAsStateWithLifecycle()
 
     // When auth state changes to authenticated, navigate to Home
     LaunchedEffect(isAuthenticated) {

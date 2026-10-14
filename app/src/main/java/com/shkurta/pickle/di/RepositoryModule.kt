@@ -1,8 +1,8 @@
 package com.shkurta.pickle.di
 
-import com.shkurta.pickle.data.NotificationRepository
-import com.shkurta.pickle.data.PollRepository
-import com.shkurta.pickle.data.auth.AuthRepository
+import com.shkurta.pickle.domain.repository.NotificationRepository
+import com.shkurta.pickle.domain.repository.PollRepository
+import com.shkurta.pickle.domain.repository.AuthRepository
 import com.shkurta.pickle.data.auth.AuthRepositoryImpl
 import com.shkurta.pickle.data.remote.SupabaseNotificationRepository
 import com.shkurta.pickle.data.remote.SupabasePollRepository

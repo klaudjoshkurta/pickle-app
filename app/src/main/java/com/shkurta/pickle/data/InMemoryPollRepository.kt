@@ -1,5 +1,10 @@
 package com.shkurta.pickle.data
 
+import com.shkurta.pickle.domain.repository.PollRepository
+import com.shkurta.pickle.domain.repository.NotificationRepository
+import com.shkurta.pickle.domain.model.MIN_POLL_OPTIONS
+import com.shkurta.pickle.domain.model.distinctOptionTexts
+
 import com.shkurta.pickle.data.sample.SamplePolls
 import com.shkurta.pickle.domain.model.NotificationType
 import com.shkurta.pickle.domain.model.OptionStatus
@@ -17,14 +22,6 @@ import java.time.Instant
 import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
-
-internal const val MIN_POLL_OPTIONS = 2
-
-/** Trimmed, non-blank option texts with case-insensitive duplicates removed. */
-internal fun distinctOptionTexts(texts: List<String>): List<String> =
-    texts.map { it.trim() }
-        .filter { it.isNotEmpty() }
-        .distinctBy { it.lowercase() }
 
 @Singleton
 class InMemoryPollRepository @Inject constructor(

@@ -1,7 +1,5 @@
 package com.shkurta.pickle.data.sample
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.shkurta.pickle.domain.model.NotificationType
 import com.shkurta.pickle.domain.model.PollNotification
 import java.time.Instant
@@ -9,11 +7,9 @@ import java.time.temporal.ChronoUnit
 
 object SampleNotifications {
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private val now: Instant = Instant.now()
 
     // Newest first
-    @RequiresApi(Build.VERSION_CODES.O)
     val all: List<PollNotification> = listOf(
         PollNotification(
             id = "notif_1",

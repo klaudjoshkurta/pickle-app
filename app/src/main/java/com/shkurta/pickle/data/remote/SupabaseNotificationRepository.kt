@@ -1,7 +1,7 @@
 package com.shkurta.pickle.data.remote
 
-import com.shkurta.pickle.data.NotificationRepository
-import com.shkurta.pickle.data.auth.AuthRepository
+import com.shkurta.pickle.domain.repository.NotificationRepository
+import com.shkurta.pickle.domain.repository.AuthRepository
 import com.shkurta.pickle.data.remote.dto.CreateNotificationDto
 import com.shkurta.pickle.data.remote.dto.NotificationDto
 import com.shkurta.pickle.domain.model.NotificationType

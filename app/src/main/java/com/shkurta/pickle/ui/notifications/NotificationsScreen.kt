@@ -1,7 +1,5 @@
 package com.shkurta.pickle.ui.notifications
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -29,7 +27,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -55,17 +53,16 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun NotificationsScreen(
     onBack: () -> Unit,
     onPollClick: (String) -> Unit,
     viewModel: NotificationsViewModel = hiltViewModel(),
 ) {
-    val notifications by viewModel.notifications.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
 
     NotificationsContent(
-        notifications = notifications,
+        state = state,
         onBack = onBack,
         onMarkAllRead = { viewModel.markAllRead() },
         onNotificationClick = { notification ->
@@ -75,21 +72,21 @@ fun NotificationsScreen(
     )
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun NotificationsContent(
-    notifications: List<PollNotification>,
+    state: NotificationsUiState,
     onBack: () -> Unit,
     onMarkAllRead: () -> Unit,
     onNotificationClick: (PollNotification) -> Unit,
 ) {
+    val notifications = state.notifications
     val grouped = remember(notifications) { notifications.groupBy { dayGroup(it.createdAt) } }
 
     Scaffold(
         containerColor = Pickle.colors.canvas,
         topBar = {
             NotificationsTopBar(
-                hasUnread = notifications.any { !it.isRead },
+                hasUnread = state.hasUnread,
                 onBack = onBack,
                 onMarkAllRead = onMarkAllRead,
             )
@@ -185,7 +182,6 @@ private fun SectionLabel(
     )
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun NotificationRow(
     notification: PollNotification,
@@ -327,7 +323,6 @@ private enum class DayGroup(val label: String) {
     EARLIER("Earlier"),
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 private fun dayGroup(
     instant: Instant,
     zone: ZoneId = ZoneId.systemDefault(),
@@ -341,7 +336,6 @@ private fun dayGroup(
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 private fun relativeTime(instant: Instant, now: Instant = Instant.now()): String {
     val duration = Duration.between(instant, now)
     return when {
@@ -352,13 +346,12 @@ private fun relativeTime(instant: Instant, now: Instant = Instant.now()): String
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true, backgroundColor = 0xFFF6EFE3)
 @Composable
 private fun NotificationsContentPreview() {
     PickleTheme {
         NotificationsContent(
-            notifications = SampleNotifications.all,
+            state = NotificationsUiState(SampleNotifications.all),
             onBack = {},
             onMarkAllRead = {},
             onNotificationClick = {},
@@ -366,13 +359,12 @@ private fun NotificationsContentPreview() {
     }
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true, backgroundColor = 0xFFF6EFE3)
 @Composable
 private fun NotificationsEmptyPreview() {
     PickleTheme {
         NotificationsContent(
-            notifications = emptyList(),
+            state = NotificationsUiState(),
             onBack = {},
             onMarkAllRead = {},
             onNotificationClick = {},

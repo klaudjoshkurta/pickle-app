@@ -1,7 +1,5 @@
 package com.shkurta.pickle.data.sample
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import com.shkurta.pickle.domain.model.OptionStatus
 import com.shkurta.pickle.domain.model.Poll
 import com.shkurta.pickle.domain.model.PollOption
@@ -12,12 +10,10 @@ import java.time.temporal.ChronoUnit
 
 object SamplePolls {
 
-    @RequiresApi(Build.VERSION_CODES.O)
     private val now: Instant = Instant.now()
     const val CREATOR_ID = "user_creator"
 
     // 1. Has votes – clear winner (Pizza), plus a pending suggestion to moderate
-    @RequiresApi(Build.VERSION_CODES.O)
     val pizzaNight = Poll(
         id = "poll_1",
         question = "What should we order for pizza night?",
@@ -60,7 +56,6 @@ object SamplePolls {
     )
 
     // 2. Has votes – a tie between two options, and the poll is closed
-    @RequiresApi(Build.VERSION_CODES.O)
     val movieNight = Poll(
         id = "poll_2",
         question = "Which movie are we watching on Saturday?",
@@ -96,7 +91,6 @@ object SamplePolls {
     )
 
     // 3. No votes yet – freshly created
-    @RequiresApi(Build.VERSION_CODES.O)
     val weekendTrip = Poll(
         id = "poll_3",
         question = "Where should we go for the weekend trip?",
@@ -127,6 +121,5 @@ object SamplePolls {
         expectedVoters = 4
     )
 
-    @RequiresApi(Build.VERSION_CODES.O)
     val all: List<Poll> = listOf(pizzaNight, movieNight, weekendTrip)
 }

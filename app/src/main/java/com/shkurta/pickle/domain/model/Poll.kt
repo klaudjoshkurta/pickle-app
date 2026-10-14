@@ -1,7 +1,5 @@
 package com.shkurta.pickle.domain.model
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import java.time.Instant
 
 data class Poll(
@@ -33,7 +31,6 @@ data class Poll(
             ?.takeIf { it > 0 }
             ?.let { (totalVotes / it.toFloat()).coerceIn(0f, 1f) }
 
-    @RequiresApi(Build.VERSION_CODES.O)
     fun isOpen(now: Instant = Instant.now()): Boolean = status == PollStatus.OPEN && (closedAt == null || now.isBefore(closedAt))
 
     fun isCreator(userId: String) = creatorId == userId

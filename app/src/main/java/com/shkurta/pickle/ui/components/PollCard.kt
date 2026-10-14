@@ -1,7 +1,5 @@
 package com.shkurta.pickle.ui.components
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -43,7 +41,6 @@ import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun PollCard(
     poll: Poll,
@@ -177,14 +174,12 @@ fun PickleColors.seriesColor(index: Int): Color = when (index) {
 }
 
 /** "Closes 7:00 PM", "Closes tomorrow 6:00 PM", "Settled Mon 6:41 PM". */
-@RequiresApi(Build.VERSION_CODES.O)
 internal fun timeLabel(poll: Poll, now: Instant = Instant.now()): String? {
     val closedAt = poll.closedAt ?: return null
     val prefix = if (poll.isOpen(now)) "Closes" else "Settled"
     return "$prefix ${friendlyTime(closedAt, now)}"
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 internal fun friendlyTime(instant: Instant, now: Instant = Instant.now()): String {
     val zone = ZoneId.systemDefault()
     val date = instant.atZone(zone)
@@ -220,7 +215,6 @@ internal fun voteSummary(poll: Poll): String {
     return listOfNotNull(count, lead).joinToString(" · ")
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true, backgroundColor = 0xFFF6EFE3)
 @Composable
 private fun PollCardPreview(
@@ -235,6 +229,5 @@ private fun PollCardPreview(
 }
 
 class SamplePollProvider : PreviewParameterProvider<Poll> {
-    @RequiresApi(Build.VERSION_CODES.O)
     override val values = SamplePolls.all.asSequence()
 }

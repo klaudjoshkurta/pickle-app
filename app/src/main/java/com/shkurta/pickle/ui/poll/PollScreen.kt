@@ -1,7 +1,5 @@
 package com.shkurta.pickle.ui.poll
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -37,7 +35,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -68,7 +66,6 @@ import com.shkurta.pickle.domain.model.Outcome
 import com.shkurta.pickle.domain.model.Poll
 import com.shkurta.pickle.domain.model.PollOption
 import com.shkurta.pickle.domain.model.PollResults
-import com.shkurta.pickle.domain.model.toResults
 import com.shkurta.pickle.ui.components.BlockMeter
 import com.shkurta.pickle.ui.components.CircleIconButton
 import com.shkurta.pickle.ui.components.DashedActionButton
@@ -93,15 +90,13 @@ import com.shkurta.pickle.ui.theme.PickleTheme
 /** Above this many votes the leader meter switches from one block per vote to a 12-block scale. */
 private const val MAX_METER_BLOCKS = 12
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun PollScreen(
     onBack: () -> Unit,
     viewModel: PollViewModel = hiltViewModel(),
 ) {
-    val poll by viewModel.poll.collectAsState()
-    val myVotes by viewModel.myVotes.collectAsState()
-    val lastSuggestionStatus by viewModel.lastSuggestionStatus.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val poll = state.poll
     val context = LocalContext.current
 
     if (poll == null) {
@@ -110,13 +105,13 @@ fun PollScreen(
     }
 
     PollContent(
-        poll = poll!!,
-        currentUserId = viewModel.currentUserId,
-        myVoteOptionId = myVotes[poll!!.id],
-        lastSuggestionStatus = lastSuggestionStatus,
+        state = state,
         onBack = onBack,
-        onShare = { sharePoll(context, poll!!) },
-        onVote = { optionId -> viewModel.vote(optionId) },
+        onShare = { sharePoll(context, poll) },
+        onVote = viewModel::vote,
+        onSelectOption = viewModel::selectOption,
+        onChangeVote = viewModel::changeVote,
+        onKeepVote = viewModel::keepVote,
         onSuggest = { text ->
             viewModel.suggestOption(text)
         },
@@ -127,39 +122,37 @@ fun PollScreen(
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun PollContent(
-    poll: Poll,
-    currentUserId: String,
-    myVoteOptionId: String?,
-    lastSuggestionStatus: OptionStatus?,
+    state: PollUiState,
     onBack: () -> Unit,
     onShare: () -> Unit,
-    onVote: (String) -> Unit,
+    onVote: () -> Unit,
+    onSelectOption: (String) -> Unit,
+    onChangeVote: () -> Unit,
+    onKeepVote: () -> Unit,
     onSuggest: (String) -> Unit,
     onClearSuggestionStatus: () -> Unit,
     onModerate: (optionId: String, approve: Boolean) -> Unit,
     onClose: () -> Unit,
 ) {
     val c = Pickle.colors
-    val isOpen = poll.isOpen()
-    val isCreator = poll.isCreator(currentUserId)
-    val hasVoted = myVoteOptionId != null
-    val showResults = hasVoted || poll.settings.showResultsBeforeVoting || !isOpen
-    val canVote = isOpen && (!hasVoted || poll.settings.allowVoteChange)
-
-    var isChangingVote by rememberSaveable(myVoteOptionId) { mutableStateOf(false) }
-    val isVoting = canVote && (!hasVoted || isChangingVote)
-
-    var selectedOptionId by rememberSaveable(myVoteOptionId) { mutableStateOf(myVoteOptionId) }
+    val poll = state.poll ?: return
+    val results = state.results ?: return
+    val myVoteOptionId = state.myVoteOptionId
+    val lastSuggestionStatus = state.lastSuggestionStatus
+    val isOpen = state.isOpen
+    val isCreator = state.isCreator
+    val hasVoted = state.hasVoted
+    val showResults = state.showResults
+    val isChangingVote = state.isChangingVote
+    val isVoting = state.isVoting
+    val selectedOptionId = state.selectedOptionId
     var showCloseSheet by rememberSaveable { mutableStateOf(false) }
 
-    val results = remember(poll) { poll.toResults() }
-    // While picking, only show the live tally underneath once there's something to show
-    val showResultsSection = showResults && (!isVoting || results.totalVotes > 0)
-    val pendingSuggestions = if (isCreator && isOpen) poll.pendingSuggestions else emptyList()
-    val selectedOption = poll.approvedOptions.firstOrNull { it.id == selectedOptionId }
+    val showResultsSection = state.showResultsSection
+    val pendingSuggestions = state.pendingSuggestions
+    val selectedOption = state.selectedOption
 
     Scaffold(
         containerColor = c.canvas,
@@ -182,10 +175,7 @@ private fun PollContent(
                             hasVoted -> "Change to ${selectedOption.text}"
                             else -> "Vote for ${selectedOption.text}"
                         },
-                        onClick = {
-                            selectedOptionId?.let(onVote)
-                            isChangingVote = false
-                        },
+                        onClick = onVote,
                         enabled = selectedOptionId != null && selectedOptionId != myVoteOptionId,
                         style = PickleButtonStyle.Teal,
                         modifier = Modifier.fillMaxWidth(),
@@ -193,10 +183,7 @@ private fun PollContent(
                     if (isChangingVote) {
                         PickleButton(
                             text = "Keep my vote",
-                            onClick = {
-                                selectedOptionId = myVoteOptionId
-                                isChangingVote = false
-                            },
+                            onClick = onKeepVote,
                             style = PickleButtonStyle.Ghost,
                             modifier = Modifier.fillMaxWidth(),
                         )
@@ -217,7 +204,7 @@ private fun PollContent(
                     YoureInBanner(
                         optionText = poll.approvedOptions.firstOrNull { it.id == myVoteOptionId }?.text,
                         canChange = poll.settings.allowVoteChange,
-                        onChange = { isChangingVote = true },
+                        onChange = onChangeVote,
                     )
                 }
             }
@@ -237,7 +224,7 @@ private fun PollContent(
                     VoteOptionRow(
                         option = option,
                         selected = option.id == selectedOptionId,
-                        onClick = { selectedOptionId = option.id },
+                        onClick = { onSelectOption(option.id) },
                     )
                 }
                 if (poll.settings.allowSuggestions) {
@@ -381,7 +368,6 @@ private fun PollTopBar(
     )
 }
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 private fun PollHeader(
     poll: Poll,
@@ -1035,7 +1021,6 @@ private fun PollNotFound(
 
 private fun voteCountLabel(count: Int): String = if (count == 1) "1 vote" else "$count votes"
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Preview(showBackground = true, backgroundColor = 0xFFF6EFE3)
 @Composable
 private fun PollContentPreview(
@@ -1043,13 +1028,13 @@ private fun PollContentPreview(
 ) {
     PickleTheme {
         PollContent(
-            poll = poll,
-            currentUserId = SamplePolls.CREATOR_ID,
-            myVoteOptionId = null,
-            lastSuggestionStatus = null,
+            state = PollUiState.from(poll, SamplePolls.CREATOR_ID, null),
             onBack = {},
             onShare = {},
             onVote = {},
+            onSelectOption = {},
+            onChangeVote = {},
+            onKeepVote = {},
             onSuggest = {},
             onClearSuggestionStatus = {},
             onModerate = { _, _ -> },

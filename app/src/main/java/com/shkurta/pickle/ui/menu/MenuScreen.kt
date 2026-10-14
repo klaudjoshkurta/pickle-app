@@ -2,8 +2,6 @@ package com.shkurta.pickle.ui.menu
 
 import android.content.Context
 import android.content.Intent
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -32,7 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -54,7 +52,6 @@ import com.shkurta.pickle.ui.theme.Pickle
 import com.shkurta.pickle.ui.theme.PickleTheme
 
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun MenuScreen(
     onBack: () -> Unit,
@@ -63,8 +60,7 @@ fun MenuScreen(
     onSignedOut: () -> Unit = {},
     viewModel: MenuViewModel = hiltViewModel(),
 ) {
-    val polls by viewModel.polls.collectAsState()
-    val notifications by viewModel.notifications.collectAsState()
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val versionName = remember {
         runCatching {
@@ -72,15 +68,13 @@ fun MenuScreen(
         }.getOrNull()
     }
 
-    val myPolls = polls.filter { it.isCreator(viewModel.currentUserId) }
-
     MenuContent(
-        displayName = viewModel.displayName,
-        avatarUrl = viewModel.avatarUrl,
-        createdCount = myPolls.size,
-        openCount = myPolls.count { it.isOpen() },
-        voteCount = myPolls.sumOf { it.totalVotes },
-        unreadCount = notifications.count { !it.isRead },
+        displayName = state.displayName,
+        avatarUrl = state.avatarUrl,
+        createdCount = state.createdCount,
+        openCount = state.openCount,
+        voteCount = state.voteCount,
+        unreadCount = state.unreadCount,
         versionName = versionName,
         onBack = onBack,
         onCreatePollClick = onCreatePollClick,

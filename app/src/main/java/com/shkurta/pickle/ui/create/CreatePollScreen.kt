@@ -1,7 +1,5 @@
 package com.shkurta.pickle.ui.create
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -41,9 +39,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
@@ -58,8 +54,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.shkurta.pickle.R
-import com.shkurta.pickle.data.MIN_POLL_OPTIONS
-import com.shkurta.pickle.data.distinctOptionTexts
+import com.shkurta.pickle.domain.model.MIN_POLL_OPTIONS
 import com.shkurta.pickle.domain.model.PollSettings
 import com.shkurta.pickle.ui.components.CircleIconButton
 import com.shkurta.pickle.ui.components.DashedActionButton
@@ -71,18 +66,14 @@ import com.shkurta.pickle.ui.components.PickleTextField
 import com.shkurta.pickle.ui.components.pickleSwitchColors
 import com.shkurta.pickle.ui.theme.Pickle
 import com.shkurta.pickle.ui.theme.PickleTheme
-import java.time.Instant
-import java.time.temporal.ChronoUnit
 
-private const val MAX_POLL_OPTIONS = 10
-
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun CreatePollScreen(
     onBack: () -> Unit,
     onCreated: (String) -> Unit,
     viewModel: CreatePollViewModel = hiltViewModel(),
 ) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) {
         viewModel.createdPollId.collect { pollId ->
             onCreated(pollId)
@@ -90,43 +81,43 @@ fun CreatePollScreen(
     }
 
     CreatePollContent(
+        state = state,
         onBack = onBack,
-        onCreate = { question, options, settings, deadline, expectedVoters ->
-            viewModel.createPoll(
-                question = question,
-                optionTexts = options,
-                settings = settings,
-                closesAt = deadline.hours?.let { Instant.now().plus(it, ChronoUnit.HOURS) },
-                expectedVoters = expectedVoters,
-            )
-        },
+        onCreate = viewModel::createPoll,
+        onQuestionChange = viewModel::setQuestion,
+        onOptionChange = viewModel::setOption,
+        onAddOption = viewModel::addOption,
+        onRemoveOption = viewModel::removeOption,
+        onSettingsChange = viewModel::setSettings,
+        onDeadlineChange = viewModel::setDeadline,
+        onExpectedVotersChange = viewModel::setExpectedVoters,
     )
 }
 
 @Composable
 private fun CreatePollContent(
+    state: CreatePollUiState,
     onBack: () -> Unit,
-    onCreate: (
-        question: String,
-        options: List<String>,
-        settings: PollSettings,
-        deadline: Deadline,
-        expectedVoters: Int?,
-    ) -> Unit,
+    onCreate: () -> Unit,
+    onQuestionChange: (String) -> Unit = {},
+    onOptionChange: (Int, String) -> Unit = { _, _ -> },
+    onAddOption: () -> Unit = {},
+    onRemoveOption: (Int) -> Unit = {},
+    onSettingsChange: (PollSettings) -> Unit = {},
+    onDeadlineChange: (Deadline) -> Unit = {},
+    onExpectedVotersChange: (String) -> Unit = {},
 ) {
     val c = Pickle.colors
-    val defaults = PollSettings()
-    var question by rememberSaveable { mutableStateOf("") }
-    var options by rememberSaveable { mutableStateOf(List(MIN_POLL_OPTIONS) { "" }) }
-    var allowSuggestions by rememberSaveable { mutableStateOf(defaults.allowSuggestions) }
-    var requireApproval by rememberSaveable { mutableStateOf(defaults.requireApproval) }
-    var showResultsBeforeVoting by rememberSaveable { mutableStateOf(defaults.showResultsBeforeVoting) }
-    var allowVoteChange by rememberSaveable { mutableStateOf(defaults.allowVoteChange) }
-    var deadline by rememberSaveable { mutableStateOf(Deadline.NONE) }
-    var expectedVoters by rememberSaveable { mutableStateOf("") }
-
-    val filledOptions = distinctOptionTexts(options).size
-    val isValid = question.isNotBlank() && filledOptions >= MIN_POLL_OPTIONS
+    val question = state.question
+    val options = state.options
+    val allowSuggestions = state.settings.allowSuggestions
+    val requireApproval = state.settings.requireApproval
+    val showResultsBeforeVoting = state.settings.showResultsBeforeVoting
+    val allowVoteChange = state.settings.allowVoteChange
+    val deadline = state.deadline
+    val expectedVoters = state.expectedVoters
+    val filledOptions = state.filledOptions
+    val isValid = state.isValid
 
     Scaffold(
         modifier = Modifier.imePadding(),
@@ -135,20 +126,7 @@ private fun CreatePollContent(
         bottomBar = {
             PickleButton(
                 text = "Create & get the link",
-                onClick = {
-                    onCreate(
-                        question,
-                        options,
-                        PollSettings(
-                            allowSuggestions = allowSuggestions,
-                            requireApproval = requireApproval,
-                            showResultsBeforeVoting = showResultsBeforeVoting,
-                            allowVoteChange = allowVoteChange,
-                        ),
-                        deadline,
-                        expectedVoters.toIntOrNull(),
-                    )
-                },
+                onClick = onCreate,
                 enabled = isValid,
                 style = PickleButtonStyle.Teal,
                 modifier = Modifier
@@ -168,7 +146,7 @@ private fun CreatePollContent(
             SectionLabel(text = "What are we deciding?")
             PickleTextField(
                 value = question,
-                onValueChange = { question = it },
+                onValueChange = onQuestionChange,
                 placeholder = "Pizza night: what are we ordering?",
                 singleLine = false,
                 keyboardOptions = KeyboardOptions(
@@ -185,9 +163,7 @@ private fun CreatePollContent(
                 options.forEachIndexed { index, text ->
                     PickleTextField(
                         value = text,
-                        onValueChange = { newText ->
-                            options = options.toMutableList().also { it[index] = newText }
-                        },
+                        onValueChange = { newText -> onOptionChange(index, newText) },
                         placeholder = "Option ${index + 1}",
                         keyboardOptions = KeyboardOptions(
                             capitalization = KeyboardCapitalization.Sentences,
@@ -196,9 +172,7 @@ private fun CreatePollContent(
                         trailing = if (options.size > MIN_POLL_OPTIONS) {
                             {
                                 IconButton(
-                                    onClick = {
-                                        options = options.toMutableList().also { it.removeAt(index) }
-                                    },
+                                    onClick = { onRemoveOption(index) },
                                     modifier = Modifier.size(32.dp),
                                 ) {
                                     Icon(
@@ -216,7 +190,7 @@ private fun CreatePollContent(
                 }
                 DashedActionButton(
                     text = "Add an option",
-                    onClick = { options = options + "" },
+                    onClick = onAddOption,
                     enabled = options.size < MAX_POLL_OPTIONS,
                 )
             }
@@ -236,7 +210,7 @@ private fun CreatePollContent(
                     DeadlinePill(
                         label = entry.label,
                         selected = entry == deadline,
-                        onClick = { deadline = entry },
+                        onClick = { onDeadlineChange(entry) },
                     )
                 }
             }
@@ -247,7 +221,7 @@ private fun CreatePollContent(
                     label = "Voters can suggest options",
                     description = "Let the crew add ideas",
                     checked = allowSuggestions,
-                    onCheckedChange = { allowSuggestions = it },
+                    onCheckedChange = { onSettingsChange(state.settings.copy(allowSuggestions = it)) },
                 )
                 AnimatedVisibility(visible = allowSuggestions) {
                     Column {
@@ -256,7 +230,7 @@ private fun CreatePollContent(
                             label = "Approve suggestions first",
                             description = "You approve each one before it joins",
                             checked = requireApproval,
-                            onCheckedChange = { requireApproval = it },
+                            onCheckedChange = { onSettingsChange(state.settings.copy(requireApproval = it)) },
                         )
                     }
                 }
@@ -265,19 +239,19 @@ private fun CreatePollContent(
                     label = "Show results before voting",
                     description = "Off = results only after you vote, no bandwagons",
                     checked = showResultsBeforeVoting,
-                    onCheckedChange = { showResultsBeforeVoting = it },
+                    onCheckedChange = { onSettingsChange(state.settings.copy(showResultsBeforeVoting = it)) },
                 )
                 CardDivider()
                 SettingRow(
                     label = "Allow changing vote",
                     description = "Voters can switch while the poll is open",
                     checked = allowVoteChange,
-                    onCheckedChange = { allowVoteChange = it },
+                    onCheckedChange = { onSettingsChange(state.settings.copy(allowVoteChange = it)) },
                 )
                 CardDivider()
                 ExpectedVotersRow(
                     value = expectedVoters,
-                    onValueChange = { expectedVoters = it.filter(Char::isDigit).take(4) },
+                    onValueChange = onExpectedVotersChange,
                 )
             }
         }
@@ -495,21 +469,14 @@ private fun SettingText(
     }
 }
 
-private enum class Deadline(val label: String, val hours: Long?) {
-    NONE("No deadline", null),
-    ONE_HOUR("In 1 hour", 1),
-    ONE_DAY("1 day", 24),
-    THREE_DAYS("3 days", 72),
-    ONE_WEEK("1 week", 168),
-}
-
 @Preview(showBackground = true, backgroundColor = 0xFFF6EFE3)
 @Composable
 private fun CreatePollContentPreview() {
     PickleTheme {
         CreatePollContent(
+            state = CreatePollUiState(),
             onBack = {},
-            onCreate = { _, _, _, _, _ -> },
+            onCreate = {},
         )
     }
 }

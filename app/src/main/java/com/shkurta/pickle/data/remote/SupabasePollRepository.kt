@@ -1,8 +1,10 @@
 package com.shkurta.pickle.data.remote
 
-import com.shkurta.pickle.data.NotificationRepository
-import com.shkurta.pickle.data.PollRepository
-import com.shkurta.pickle.data.auth.AuthRepository
+import com.shkurta.pickle.domain.repository.NotificationRepository
+import com.shkurta.pickle.domain.repository.PollRepository
+import com.shkurta.pickle.domain.repository.AuthRepository
+import com.shkurta.pickle.domain.model.MIN_POLL_OPTIONS
+import com.shkurta.pickle.domain.model.distinctOptionTexts
 import com.shkurta.pickle.data.remote.dto.CreateOptionDto
 import com.shkurta.pickle.data.remote.dto.CreatePollDto
 import com.shkurta.pickle.data.remote.dto.PollDto
@@ -69,8 +71,8 @@ class SupabasePollRepository @Inject constructor(
         creatorId: String,
     ): Poll? {
         val trimmedQuestion = question.trim()
-        val texts = optionTexts.map { it.trim() }.filter { it.isNotEmpty() }.distinctBy { it.lowercase() }
-        if (trimmedQuestion.isEmpty() || texts.size < 2) return null
+        val texts = distinctOptionTexts(optionTexts)
+        if (trimmedQuestion.isEmpty() || texts.size < MIN_POLL_OPTIONS) return null
 
         val pollDto = CreatePollDto(
             question = trimmedQuestion,

@@ -44,7 +44,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -79,65 +79,70 @@ import com.shkurta.pickle.ui.components.PickleHeadline
 import com.shkurta.pickle.ui.components.PickleTextField
 import com.shkurta.pickle.ui.theme.Pickle
 
-private enum class SignUpStep { Name, Avatar, Email, Password }
-
-private const val MIN_PASSWORD_LENGTH = 6
-
 @Composable
 fun AuthScreen(
     initialSignUp: Boolean = false,
     onBack: () -> Unit = {},
     viewModel: AuthViewModel = hiltViewModel(),
 ) {
-    val uiState by viewModel.uiState.collectAsState()
-    var isSignUp by rememberSaveable { mutableStateOf(initialSignUp) }
-    var step by rememberSaveable { mutableStateOf(SignUpStep.Name) }
-    var name by rememberSaveable { mutableStateOf("") }
-    var avatarSeeds by rememberSaveable { mutableStateOf(DiceBear.randomSeeds()) }
-    var selectedSeed by rememberSaveable { mutableStateOf<String?>(null) }
-    var email by rememberSaveable { mutableStateOf("") }
-    var password by rememberSaveable { mutableStateOf("") }
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(initialSignUp) { viewModel.initialize(initialSignUp) }
+    AuthContent(
+        state = state,
+        onBack = onBack,
+        onNameChange = viewModel::setName,
+        onEmailChange = viewModel::setEmail,
+        onPasswordChange = viewModel::setPassword,
+        onSelectAvatar = viewModel::selectAvatar,
+        onShuffleAvatars = viewModel::shuffleAvatars,
+        onToggleMode = viewModel::toggleMode,
+        onPreviousStep = viewModel::previousStep,
+        onNextStep = viewModel::nextStep,
+        onSubmit = viewModel::submit,
+        onClearError = viewModel::clearError,
+    )
+}
+
+@Composable
+private fun AuthContent(
+    state: AuthUiState,
+    onBack: () -> Unit,
+    onNameChange: (String) -> Unit,
+    onEmailChange: (String) -> Unit,
+    onPasswordChange: (String) -> Unit,
+    onSelectAvatar: (String) -> Unit,
+    onShuffleAvatars: () -> Unit,
+    onToggleMode: () -> Unit,
+    onPreviousStep: () -> Unit,
+    onNextStep: () -> Unit,
+    onSubmit: () -> Unit,
+    onClearError: () -> Unit,
+) {
+    val isSignUp = state.isSignUp
+    val step = state.step
+    val name = state.name
+    val avatarSeeds = state.avatarSeeds
+    val selectedSeed = state.selectedSeed
+    val email = state.email
+    val password = state.password
     val snackbarHostState = remember { SnackbarHostState() }
-    val isLoading = uiState is AuthUiState.Loading
+    val isLoading = state.isLoading
 
-    LaunchedEffect(uiState) {
-        if (uiState is AuthUiState.Error) {
-            snackbarHostState.showSnackbar((uiState as AuthUiState.Error).message)
-            viewModel.clearError()
+    LaunchedEffect(state.status) {
+        val status = state.status
+        if (status is AuthStatus.Error) {
+            snackbarHostState.showSnackbar(status.message)
+            onClearError()
         }
     }
 
-    val isEmailValid = email.trim().contains('@')
-    val isPasswordValid = password.length >= MIN_PASSWORD_LENGTH
-    val isStepValid = when (step) {
-        SignUpStep.Name -> name.isNotBlank()
-        SignUpStep.Avatar -> selectedSeed != null
-        SignUpStep.Email -> isEmailValid
-        SignUpStep.Password -> isPasswordValid
-    }
-    val canSignIn = email.isNotBlank() && password.isNotBlank()
-
-    val submit = {
-        if (isSignUp) {
-            val seed = selectedSeed
-            if (name.isNotBlank() && seed != null && isEmailValid && isPasswordValid) {
-                viewModel.signUp(email.trim(), password, name.trim(), DiceBear.avatarUrl(seed))
-            }
-        } else if (canSignIn) {
-            viewModel.signIn(email.trim(), password)
-        }
-    }
-
-    val goNext = {
-        if (isStepValid) {
-            if (step == SignUpStep.Password) submit()
-            else step = SignUpStep.entries[step.ordinal + 1]
-        }
-    }
-
-    val canGoBackStep = isSignUp && step != SignUpStep.Name
+    val isStepValid = state.isStepValid
+    val canSignIn = state.canSignIn
+    val submit = onSubmit
+    val goNext = onNextStep
+    val canGoBackStep = state.canGoBackStep
     val handleBack = {
-        if (canGoBackStep) step = SignUpStep.entries[step.ordinal - 1]
+        if (canGoBackStep) onPreviousStep()
         else onBack()
     }
 
@@ -203,7 +208,7 @@ fun AuthScreen(
                                 )
                                 PickleTextField(
                                     value = name,
-                                    onValueChange = { name = it },
+                                    onValueChange = onNameChange,
                                     placeholder = stringResource(R.string.sign_up_name_placeholder),
                                     keyboardOptions = KeyboardOptions(
                                         capitalization = KeyboardCapitalization.Words,
@@ -222,15 +227,12 @@ fun AuthScreen(
                                 AvatarGrid(
                                     seeds = avatarSeeds,
                                     selectedSeed = selectedSeed,
-                                    onSelect = { selectedSeed = it },
+                                    onSelect = onSelectAvatar,
                                 )
                                 Spacer(Modifier.height(12.dp))
                                 PickleButton(
                                     text = stringResource(R.string.sign_up_shuffle),
-                                    onClick = {
-                                        avatarSeeds = DiceBear.randomSeeds()
-                                        selectedSeed = null
-                                    },
+                                    onClick = onShuffleAvatars,
                                     style = PickleButtonStyle.Outline,
                                     height = 36.dp,
                                     modifier = Modifier.align(Alignment.End),
@@ -244,7 +246,7 @@ fun AuthScreen(
                                 )
                                 EmailField(
                                     value = email,
-                                    onValueChange = { email = it },
+                                    onValueChange = onEmailChange,
                                     imeAction = ImeAction.Next,
                                     onImeAction = { goNext() },
                                     enabled = !isLoading,
@@ -258,7 +260,7 @@ fun AuthScreen(
                                 )
                                 PasswordField(
                                     value = password,
-                                    onValueChange = { password = it },
+                                    onValueChange = onPasswordChange,
                                     onDone = { goNext() },
                                     enabled = !isLoading,
                                 )
@@ -275,7 +277,7 @@ fun AuthScreen(
                 )
                 EmailField(
                     value = email,
-                    onValueChange = { email = it },
+                    onValueChange = onEmailChange,
                     imeAction = ImeAction.Next,
                     onImeAction = null,
                     enabled = !isLoading,
@@ -283,7 +285,7 @@ fun AuthScreen(
                 Spacer(Modifier.height(12.dp))
                 PasswordField(
                     value = password,
-                    onValueChange = { password = it },
+                    onValueChange = onPasswordChange,
                     onDone = { submit() },
                     enabled = !isLoading,
                 )
@@ -303,10 +305,7 @@ fun AuthScreen(
             )
             Spacer(Modifier.height(12.dp))
             TextButton(
-                onClick = {
-                    isSignUp = !isSignUp
-                    step = SignUpStep.Name
-                },
+                onClick = onToggleMode,
                 enabled = !isLoading,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
             ) {

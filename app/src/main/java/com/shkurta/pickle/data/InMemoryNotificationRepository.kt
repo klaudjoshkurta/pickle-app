@@ -1,5 +1,7 @@
 package com.shkurta.pickle.data
 
+import com.shkurta.pickle.domain.repository.NotificationRepository
+
 import com.shkurta.pickle.data.sample.SampleNotifications
 import com.shkurta.pickle.domain.model.NotificationType
 import com.shkurta.pickle.domain.model.Poll

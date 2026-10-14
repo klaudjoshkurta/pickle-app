@@ -1,4 +1,4 @@
-package com.shkurta.pickle.data
+package com.shkurta.pickle.domain.repository
 
 import com.shkurta.pickle.domain.model.OptionStatus
 import com.shkurta.pickle.domain.model.Poll
