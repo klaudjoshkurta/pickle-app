@@ -1,6 +1,11 @@
 <resources>
 
-    <string name="onboarding_description">Πάρτε ομαδικές αποφάσεις μαζί</string>
+    <string name="onboarding_headline">"Δεν αποφασίζετε;\nΑφήστε την παρέα να το λύσει."</string>
+    <string name="onboarding_description">Μοιραστείτε ένα link. Οι φίλοι ψηφίζουν από το κινητό — χωρίς εφαρμογή, χωρίς λογαριασμό. Βλέπετε τα αποτελέσματα ζωντανά.</string>
+    <string name="onboarding_hero_label">Βραδιά πίτσας · προηγείται</string>
+    <string name="onboarding_hero_option">Detroit-style από Emmy’s</string>
+    <string name="onboarding_hero_votes">από 11 ψήφους</string>
+    <string name="onboarding_guest_note">Ως επισκέπτης μπορείτε να εξερευνήσετε πριν εγγραφείτε.</string>
     <string name="create_account">Δημιουργία λογαριασμού</string>
     <string name="try_it">Δοκιμή ως επισκέπτης</string>
     <string name="already_have_an_account">"Έχετε ήδη λογαριασμό; "</string>
@@ -16,11 +21,11 @@
     <string name="show_password_cd">Εμφάνιση κωδικού</string>
     <string name="hide_password_cd">Απόκρυψη κωδικού</string>
     <string name="sign_up_step">Βήμα %1$d από %2$d</string>
-    <string name="sign_up_name_title">Πώς να σας λέμε;</string>
-    <string name="sign_up_name_subtitle">Έτσι θα σας βλέπουν οι φίλοι σας στις ψηφοφορίες.</string>
+    <string name="sign_up_name_title">Κάντε το δικό σας</string>
+    <string name="sign_up_name_subtitle">Ο λογαριασμός κρατά τις ψηφοφορίες και το πρόσωπό σας σε ένα μέρος.</string>
     <string name="sign_up_name_placeholder">Το όνομά σας</string>
     <string name="sign_up_avatar_title">Διαλέξτε το πρόσωπό σας</string>
-    <string name="sign_up_avatar_subtitle">Επιλέξτε το πλασματάκι που σας εκφράζει.</string>
+    <string name="sign_up_avatar_subtitle">Η παρέα βλέπει αυτό το πρόσωπο δίπλα στην ψήφο σας.</string>
     <string name="sign_up_avatar_cd">Επιλογή avatar %1$d</string>
     <string name="sign_up_shuffle">Ανακάτεμα</string>
     <string name="sign_up_email_title">Ποιο είναι το email σας;</string>

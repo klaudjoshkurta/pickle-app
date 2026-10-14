@@ -9,6 +9,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.NavDestination.Companion.hasRoute
 import androidx.navigation.toRoute
 import com.shkurta.pickle.ui.auth.AuthScreen
 import com.shkurta.pickle.ui.auth.AuthViewModel
@@ -38,8 +39,15 @@ fun AppNavigation(
     NavHost(
         navController = navController,
         startDestination = Screen.Onboarding,
+        enterTransition = sharedAxisEnter,
+        exitTransition = defaultExit,
+        popEnterTransition = defaultPopEnter,
+        popExitTransition = sharedAxisPopExit,
     ) {
-        composable<Screen.Onboarding> {
+        composable<Screen.Onboarding>(
+            enterTransition = fadeThroughEnter,
+            popEnterTransition = sharedAxisPopEnter,
+        ) {
             OnboardingScreen(
                 onCreateAccount = {
                     navController.navigate(Screen.Auth(signUp = true))
@@ -61,7 +69,14 @@ fun AppNavigation(
                 onBack = { navController.popBackStack() },
             )
         }
-        composable<Screen.Home> {
+        composable<Screen.Home>(
+            // Arriving from onboarding/auth replaces the whole back stack, so fade rather than slide
+            enterTransition = {
+                val fromRoot = initialState.destination.hasRoute<Screen.Onboarding>() ||
+                    initialState.destination.hasRoute<Screen.Auth>()
+                if (fromRoot) fadeThroughEnter() else sharedAxisEnter()
+            },
+        ) {
             HomeScreen(
                 onPollClick = { pollId -> navController.navigate(Screen.Poll(pollId)) },
                 onCreateClick = { navController.navigate(Screen.CreatePoll) },
@@ -69,7 +84,11 @@ fun AppNavigation(
                 onMenuClick = { navController.navigate(Screen.Menu) }
             )
         }
-        composable<Screen.CreatePoll> {
+        composable<Screen.CreatePoll>(
+            enterTransition = sheetEnter,
+            popExitTransition = sheetPopExit,
+            exitTransition = fadeThroughExit,
+        ) {
             CreatePollScreen(
                 onBack = { navController.popBackStack() },
                 onCreated = { pollId ->

@@ -5,10 +5,14 @@ import android.content.Intent
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -41,9 +45,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.shkurta.pickle.R
+import com.shkurta.pickle.ui.components.Avatar
+import com.shkurta.pickle.ui.components.CircleIconButton
+import com.shkurta.pickle.ui.components.PickleBorderWidth
+import com.shkurta.pickle.ui.components.PickleCard
+import com.shkurta.pickle.ui.components.PickleHeadline
+import com.shkurta.pickle.ui.theme.Pickle
 import com.shkurta.pickle.ui.theme.PickleTheme
 
-private val CardShape = RoundedCornerShape(20.dp)
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
@@ -66,6 +75,8 @@ fun MenuScreen(
     val myPolls = polls.filter { it.isCreator(viewModel.currentUserId) }
 
     MenuContent(
+        displayName = viewModel.displayName,
+        avatarUrl = viewModel.avatarUrl,
         createdCount = myPolls.size,
         openCount = myPolls.count { it.isOpen() },
         voteCount = myPolls.sumOf { it.totalVotes },
@@ -84,6 +95,8 @@ fun MenuScreen(
 
 @Composable
 private fun MenuContent(
+    displayName: String?,
+    avatarUrl: String?,
     createdCount: Int,
     openCount: Int,
     voteCount: Int,
@@ -96,6 +109,7 @@ private fun MenuContent(
     onSignOut: () -> Unit = {},
 ) {
     Scaffold(
+        containerColor = Pickle.colors.canvas,
         topBar = { MenuTopBar(onBack = onBack) },
     ) { innerPadding ->
         Column(
@@ -105,26 +119,42 @@ private fun MenuContent(
                 .verticalScroll(rememberScrollState())
                 .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
         ) {
-            Surface(
+            Column(
                 modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.surface,
-                shape = CardShape,
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Row(
-                    modifier = Modifier.padding(vertical = 20.dp),
-                ) {
+                Avatar(
+                    url = avatarUrl,
+                    fallbackInitial = displayName,
+                    size = 96.dp,
+                    modifier = Modifier.border(4.dp, Pickle.colors.mustard, CircleShape),
+                )
+                if (displayName != null) {
+                    Spacer(Modifier.height(12.dp))
+                    PickleHeadline(
+                        text = displayName,
+                        style = MaterialTheme.typography.headlineSmall,
+                    )
+                }
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "This is how the crew sees you",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Pickle.colors.inkMuted,
+                )
+            }
+            Spacer(Modifier.height(20.dp))
+
+            PickleCard(contentPadding = PaddingValues(vertical = 18.dp)) {
+                Row {
                     Stat(value = createdCount, label = "Polls", modifier = Modifier.weight(1f))
-                    Stat(value = openCount, label = "Open", modifier = Modifier.weight(1f))
+                    Stat(value = openCount, label = "Live", modifier = Modifier.weight(1f))
                     Stat(value = voteCount, label = "Votes", modifier = Modifier.weight(1f))
                 }
             }
 
             SectionLabel(text = "Polls")
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.surface,
-                shape = CardShape,
-            ) {
+            PickleCard(contentPadding = PaddingValues(0.dp)) {
                 Column {
                     MenuRow(
                         iconRes = R.drawable.ic_add,
@@ -143,11 +173,7 @@ private fun MenuContent(
             }
 
             SectionLabel(text = "About")
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colorScheme.surface,
-                shape = CardShape,
-            ) {
+            PickleCard(contentPadding = PaddingValues(0.dp)) {
                 Column {
                     MenuRow(
                         iconRes = R.drawable.ic_share,
@@ -180,25 +206,24 @@ private fun MenuTopBar(
     modifier: Modifier = Modifier,
 ) {
     TopAppBar(
-        modifier = modifier,
+        modifier = modifier.padding(horizontal = 8.dp),
         title = {
             Text(
-                text = "Menu",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
+                text = "Account",
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(start = 8.dp),
             )
         },
         navigationIcon = {
-            IconButton(onClick = onBack) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_arrow_back),
-                    contentDescription = "Back",
-                )
-            }
+            CircleIconButton(
+                iconRes = R.drawable.ic_arrow_back,
+                contentDescription = "Back",
+                onClick = onBack,
+            )
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.background,
-            titleContentColor = MaterialTheme.colorScheme.onBackground,
+            containerColor = Pickle.colors.canvas,
+            titleContentColor = Pickle.colors.ink,
         ),
     )
 }
@@ -215,14 +240,13 @@ private fun Stat(
     ) {
         Text(
             text = value.toString(),
-            style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.SemiBold,
-            color = MaterialTheme.colorScheme.primary,
+            style = MaterialTheme.typography.headlineMedium,
+            color = Pickle.colors.ink,
         )
         Text(
             text = label,
             style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f),
+            color = Pickle.colors.inkMuted,
         )
     }
 }
@@ -235,8 +259,7 @@ private fun SectionLabel(
     Text(
         text = text,
         style = MaterialTheme.typography.labelLarge,
-        fontWeight = FontWeight.SemiBold,
-        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f),
+        color = Pickle.colors.inkMuted,
         modifier = modifier.padding(start = 4.dp, top = 24.dp, bottom = 8.dp),
     )
 }
@@ -245,7 +268,7 @@ private fun SectionLabel(
 private fun CardDivider() {
     HorizontalDivider(
         modifier = Modifier.padding(horizontal = 16.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant,
+        color = Pickle.colors.lineSoft,
     )
 }
 
@@ -275,14 +298,15 @@ private fun MenuRow(
         Box(
             modifier = Modifier
                 .size(36.dp)
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f), CircleShape),
+                .background(Pickle.colors.tealSoft, CircleShape)
+                .border(PickleBorderWidth, Pickle.colors.lineStrong, CircleShape),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 painter = painterResource(iconRes),
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(20.dp),
+                tint = Pickle.colors.ink,
+                modifier = Modifier.size(18.dp),
             )
         }
         Text(
@@ -296,11 +320,7 @@ private fun MenuRow(
                 text = trailing,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = if (highlightTrailing) FontWeight.SemiBold else FontWeight.Normal,
-                color = if (highlightTrailing) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f)
-                },
+                color = if (highlightTrailing) Pickle.colors.textAccent else Pickle.colors.inkMuted,
             )
         }
     }
@@ -314,11 +334,13 @@ private fun shareApp(context: Context) {
     context.startActivity(Intent.createChooser(intent, null))
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFFFAF2E3)
+@Preview(showBackground = true, backgroundColor = 0xFFF6EFE3)
 @Composable
 private fun MenuContentPreview() {
     PickleTheme {
         MenuContent(
+            displayName = "Klaud",
+            avatarUrl = null,
             createdCount = 3,
             openCount = 2,
             voteCount = 19,

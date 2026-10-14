@@ -3,6 +3,7 @@ package com.shkurta.pickle.ui.notifications
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -44,7 +45,10 @@ import com.shkurta.pickle.R
 import com.shkurta.pickle.data.sample.SampleNotifications
 import com.shkurta.pickle.domain.model.NotificationType
 import com.shkurta.pickle.domain.model.PollNotification
-import com.shkurta.pickle.ui.components.ClosedColor
+import com.shkurta.pickle.ui.components.CircleIconButton
+import com.shkurta.pickle.ui.components.PickleBorderWidth
+import com.shkurta.pickle.ui.components.PickleCard
+import com.shkurta.pickle.ui.theme.Pickle
 import com.shkurta.pickle.ui.theme.PickleTheme
 import java.time.Duration
 import java.time.Instant
@@ -82,6 +86,7 @@ private fun NotificationsContent(
     val grouped = remember(notifications) { notifications.groupBy { dayGroup(it.createdAt) } }
 
     Scaffold(
+        containerColor = Pickle.colors.canvas,
         topBar = {
             NotificationsTopBar(
                 hasUnread = notifications.any { !it.isRead },
@@ -134,21 +139,20 @@ private fun NotificationsTopBar(
     modifier: Modifier = Modifier,
 ) {
     TopAppBar(
-        modifier = modifier,
+        modifier = modifier.padding(horizontal = 8.dp),
         title = {
             Text(
                 text = "Notifications",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.padding(start = 8.dp),
             )
         },
         navigationIcon = {
-            IconButton(onClick = onBack) {
-                Icon(
-                    painter = painterResource(R.drawable.ic_arrow_back),
-                    contentDescription = "Back",
-                )
-            }
+            CircleIconButton(
+                iconRes = R.drawable.ic_arrow_back,
+                contentDescription = "Back",
+                onClick = onBack,
+            )
         },
         actions = {
             if (hasUnread) {
@@ -156,14 +160,14 @@ private fun NotificationsTopBar(
                     Text(
                         text = "Mark all read",
                         style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
+                        color = Pickle.colors.textAccent,
                     )
                 }
             }
         },
         colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.background,
-            titleContentColor = MaterialTheme.colorScheme.onBackground,
+            containerColor = Pickle.colors.canvas,
+            titleContentColor = Pickle.colors.ink,
         ),
     )
 }
@@ -176,8 +180,7 @@ private fun SectionLabel(
     Text(
         text = text,
         style = MaterialTheme.typography.labelLarge,
-        fontWeight = FontWeight.SemiBold,
-        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f),
+        color = Pickle.colors.inkMuted,
         modifier = modifier.padding(start = 4.dp, top = 14.dp),
     )
 }
@@ -189,29 +192,30 @@ private fun NotificationRow(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val tint = notification.type.tint()
+    val c = Pickle.colors
+    val (badgeColor, iconColor) = notification.type.badgeColors()
 
-    Surface(
+    PickleCard(
+        modifier = modifier,
         onClick = onClick,
-        modifier = modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(16.dp),
+        borderColor = if (notification.isRead) c.lineSoft else c.lineStrong,
+        contentPadding = PaddingValues(14.dp),
     ) {
         Row(
-            modifier = Modifier.padding(14.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
                 modifier = Modifier
                     .size(40.dp)
-                    .background(tint.copy(alpha = 0.12f), CircleShape),
+                    .background(badgeColor, CircleShape)
+                    .border(PickleBorderWidth, c.lineStrong, CircleShape),
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
                     painter = painterResource(notification.type.iconRes()),
                     contentDescription = null,
-                    tint = tint,
+                    tint = iconColor,
                     modifier = Modifier.size(20.dp),
                 )
             }
@@ -227,7 +231,7 @@ private fun NotificationRow(
                 Text(
                     text = notification.body(),
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f),
+                    color = c.inkMuted,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -240,13 +244,13 @@ private fun NotificationRow(
                 Text(
                     text = relativeTime(notification.createdAt),
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f),
+                    color = c.inkMuted,
                 )
                 if (!notification.isRead) {
                     Box(
                         modifier = Modifier
                             .size(8.dp)
-                            .background(MaterialTheme.colorScheme.primary, CircleShape),
+                            .background(c.tomato, CircleShape),
                     )
                 }
             }
@@ -303,11 +307,18 @@ private fun NotificationType.iconRes(): Int = when (this) {
     NotificationType.SUGGESTION_REJECTED -> R.drawable.ic_close
 }
 
+/** Badge fill to icon tint, following the brand roles (mustard = celebration, tomato = the leader, teal = live). */
 @Composable
-private fun NotificationType.tint(): Color = when (this) {
-    NotificationType.POLL_CLOSED -> ClosedColor
-    NotificationType.SUGGESTION_REJECTED -> MaterialTheme.colorScheme.onSurfaceVariant
-    else -> MaterialTheme.colorScheme.primary
+private fun NotificationType.badgeColors(): Pair<Color, Color> {
+    val c = Pickle.colors
+    return when (this) {
+        NotificationType.POLL_CREATED -> c.teal to c.onBrand
+        NotificationType.POLL_CLOSED -> c.mustard to c.onMustard
+        NotificationType.NEW_VOTES -> c.tomato to c.onBrand
+        NotificationType.SUGGESTION_RECEIVED -> c.tealSoft to c.ink
+        NotificationType.SUGGESTION_APPROVED -> c.tealSoft to c.teal
+        NotificationType.SUGGESTION_REJECTED -> c.sunken to c.inkMuted
+    }
 }
 
 private enum class DayGroup(val label: String) {
@@ -342,7 +353,7 @@ private fun relativeTime(instant: Instant, now: Instant = Instant.now()): String
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-@Preview(showBackground = true, backgroundColor = 0xFFFAF2E3)
+@Preview(showBackground = true, backgroundColor = 0xFFF6EFE3)
 @Composable
 private fun NotificationsContentPreview() {
     PickleTheme {
@@ -356,7 +367,7 @@ private fun NotificationsContentPreview() {
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
-@Preview(showBackground = true, backgroundColor = 0xFFFAF2E3)
+@Preview(showBackground = true, backgroundColor = 0xFFF6EFE3)
 @Composable
 private fun NotificationsEmptyPreview() {
     PickleTheme {

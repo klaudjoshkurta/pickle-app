@@ -10,7 +10,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.put
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -27,6 +29,17 @@ class AuthRepositoryImpl @Inject constructor(
 
     override val currentUserId: String?
         get() = auth.currentUserOrNull()?.id
+
+    override val displayName: String?
+        get() = metadataString("display_name")
+
+    override val avatarUrl: String?
+        get() = metadataString("avatar_url")
+
+    private fun metadataString(key: String): String? =
+        (auth.currentUserOrNull()?.userMetadata?.get(key) as? JsonPrimitive)
+            ?.contentOrNull
+            ?.takeIf { it.isNotBlank() }
 
     init {
         scope.launch {

@@ -3,6 +3,7 @@ package com.shkurta.pickle.ui.components
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -27,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.shkurta.pickle.ui.theme.Pickle
 import com.shkurta.pickle.ui.theme.PickleTheme
 
 @Composable
@@ -39,27 +41,29 @@ fun <T> SegmentedToggle(
 ) {
     val selectedIndex = options.indexOf(selected).coerceAtLeast(0)
 
+    val c = Pickle.colors
     Row(
         modifier = modifier
-            .height(48.dp)
+            .height(40.dp)
+            .background(c.sunken, CircleShape)
+            .padding(4.dp)
             .selectableGroup(),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         options.forEachIndexed { index, option ->
             val isSelected = index == selectedIndex
             val pillColor by animateColorAsState(
-                targetValue = MaterialTheme.colorScheme.surfaceVariant.copy(
-                    alpha = if (isSelected) 1f else 0f,
-                ),
+                targetValue = c.surface.copy(alpha = if (isSelected) 1f else 0f),
                 animationSpec = tween(250),
                 label = "pill",
             )
+            val borderColor by animateColorAsState(
+                targetValue = c.lineStrong.copy(alpha = if (isSelected) 1f else 0f),
+                animationSpec = tween(250),
+                label = "pillBorder",
+            )
             val textColor by animateColorAsState(
-                targetValue = if (isSelected) {
-                    MaterialTheme.colorScheme.primary
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.70f)
-                },
+                targetValue = if (isSelected) c.ink else c.inkMuted,
                 animationSpec = tween(250),
                 label = "label",
             )
@@ -69,6 +73,7 @@ fun <T> SegmentedToggle(
                     .fillMaxHeight()
                     .clip(CircleShape)
                     .background(pillColor)
+                    .border(PickleBorderWidth, borderColor, CircleShape)
                     .selectable(
                         selected = isSelected,
                         role = Role.Tab,
@@ -90,7 +95,7 @@ fun <T> SegmentedToggle(
     }
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFFFAF2E3)
+@Preview(showBackground = true, backgroundColor = 0xFFF6EFE3)
 @Composable
 private fun SegmentedTogglePreview() {
     PickleTheme {

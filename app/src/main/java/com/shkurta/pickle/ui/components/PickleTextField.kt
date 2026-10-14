@@ -27,11 +27,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.shkurta.pickle.ui.theme.Pickle
 import com.shkurta.pickle.ui.theme.PickleTheme
 
 @Composable
@@ -49,8 +49,9 @@ fun PickleTextField(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
-    val shape = RoundedCornerShape(16.dp)
+    val shape = RoundedCornerShape(12.dp)
     val colors = MaterialTheme.colorScheme
+    val c = Pickle.colors
 
     BasicTextField(
         value = value,
@@ -68,11 +69,11 @@ fun PickleTextField(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 56.dp)
-                    .background(colors.surface, shape)
+                    .heightIn(min = 52.dp)
+                    .background(c.surface, shape)
                     .border(
-                        width = 1.5.dp,
-                        color = if (isFocused) colors.primary else Color.Transparent,
+                        width = if (isFocused) 2.dp else PickleBorderWidth,
+                        color = if (isFocused) c.teal else c.lineStrong,
                         shape = shape,
                     )
                     .padding(horizontal = 16.dp)
@@ -98,7 +99,7 @@ fun PickleTextField(
     )
 }
 
-@Preview(showBackground = true, backgroundColor = 0xFFFAF2E3)
+@Preview(showBackground = true, backgroundColor = 0xFFF6EFE3)
 @Composable
 private fun PickleTextFieldPreview() {
     PickleTheme {

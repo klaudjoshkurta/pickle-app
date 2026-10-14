@@ -1,7 +1,12 @@
 <resources>
     <string name="app_name" translatable="false">Pickle</string>
-    <string name="onboarding_description">Make group decisions together</string>
-    <string name="create_account">Create account</string>
+    <string name="onboarding_headline">"Can’t decide?\nLet the crew settle it."</string>
+    <string name="onboarding_description">Share one link. Friends vote from their phones — no app, no account. You watch it land live.</string>
+    <string name="onboarding_hero_label">Pizza night · in the lead</string>
+    <string name="onboarding_hero_option">Detroit-style from Emmy’s</string>
+    <string name="onboarding_hero_votes">of 11 votes</string>
+    <string name="onboarding_guest_note">Guest mode lets you poke around before signing up.</string>
+    <string name="create_account">Create an account</string>
     <string name="try_it">Try it as a guest</string>
     <string name="already_have_an_account">"Already have an account? "</string>
     <string name="log_in">Log in</string>
@@ -16,11 +21,11 @@
     <string name="show_password_cd">Show password</string>
     <string name="hide_password_cd">Hide password</string>
     <string name="sign_up_step">Step %1$d of %2$d</string>
-    <string name="sign_up_name_title">What should we call you?</string>
-    <string name="sign_up_name_subtitle">This is how your friends will see you on polls.</string>
+    <string name="sign_up_name_title">Make it yours</string>
+    <string name="sign_up_name_subtitle">An account keeps your polls and your voting face in one place.</string>
     <string name="sign_up_name_placeholder">Your name</string>
     <string name="sign_up_avatar_title">Pick your voting face</string>
-    <string name="sign_up_avatar_subtitle">Choose the critter that represents you best.</string>
+    <string name="sign_up_avatar_subtitle">Your crew sees this face next to your vote.</string>
     <string name="sign_up_avatar_cd">Avatar option %1$d</string>
     <string name="sign_up_shuffle">Shuffle</string>
     <string name="sign_up_email_title">What\'s your email?</string>

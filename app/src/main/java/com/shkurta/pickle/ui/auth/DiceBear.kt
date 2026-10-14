@@ -4,10 +4,14 @@ import android.net.Uri
 import java.util.UUID
 
 object DiceBear {
-    private const val BASE_URL = "https://api.dicebear.com/10.x/critters/svg"
+    private const val BASE_URL = "https://api.dicebear.com/9.x/notionists/svg"
 
-    fun avatarUrl(seed: String): String = "$BASE_URL?seed=${Uri.encode(seed)}"
+    // Avatar circle fills from the design: mustard, teal-soft, peach, lavender, sky, cream, sand, blush
+    private const val BACKGROUNDS = "f3c24a,cde7e0,f6c9b5,d9c7f0,bfe0f5,fbe3c0,e6d5c3,fbdde3"
 
-    fun randomSeeds(count: Int = 9): List<String> =
+    fun avatarUrl(seed: String): String =
+        "$BASE_URL?seed=${Uri.encode(seed)}&backgroundColor=$BACKGROUNDS&backgroundType=solid"
+
+    fun randomSeeds(count: Int = 10): List<String> =
         List(count) { UUID.randomUUID().toString().take(8) }
 }

@@ -8,6 +8,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.CubicBezierEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -29,12 +32,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -71,7 +70,14 @@ import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.svg.SvgDecoder
 import com.shkurta.pickle.R
+import com.shkurta.pickle.ui.components.CircleIconButton
+import com.shkurta.pickle.ui.components.PickleBorderWidth
+import com.shkurta.pickle.ui.components.PickleBrand
+import com.shkurta.pickle.ui.components.PickleButton
+import com.shkurta.pickle.ui.components.PickleButtonStyle
+import com.shkurta.pickle.ui.components.PickleHeadline
 import com.shkurta.pickle.ui.components.PickleTextField
+import com.shkurta.pickle.ui.theme.Pickle
 
 private enum class SignUpStep { Name, Avatar, Email, Password }
 
@@ -144,18 +150,12 @@ fun AuthScreen(
                 modifier = Modifier.padding(horizontal = 12.dp),
                 title = {},
                 navigationIcon = {
-                    FilledIconButton(
+                    CircleIconButton(
+                        iconRes = R.drawable.ic_arrow_back,
+                        contentDescription = stringResource(R.string.back_button_cd),
                         onClick = handleBack,
                         enabled = !isLoading,
-                        colors = IconButtonDefaults.outlinedIconButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surface
-                        ),
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.ic_arrow_back),
-                            contentDescription = stringResource(R.string.back_button_cd),
-                        )
-                    }
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background,
@@ -171,7 +171,7 @@ fun AuthScreen(
                 .padding(innerPadding)
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
+            horizontalAlignment = Alignment.Start,
         ) {
             Spacer(Modifier.height(32.dp))
             if (isSignUp) {
@@ -180,15 +180,20 @@ fun AuthScreen(
                 AnimatedContent(
                     targetState = step,
                     transitionSpec = {
+                        // Short travel + fade (same feel as screen-to-screen navigation)
                         val direction = if (targetState > initialState) 1 else -1
-                        (slideInHorizontally { it * direction } + fadeIn()) togetherWith
-                            (slideOutHorizontally { -it * direction } + fadeOut())
+                        val easing = CubicBezierEasing(0.2f, 0f, 0f, 1f)
+                        (slideInHorizontally(tween(380, easing = easing)) { it / 6 * direction } +
+                            fadeIn(tween(220, delayMillis = 60, easing = easing))) togetherWith
+                            (slideOutHorizontally(tween(380, easing = easing)) { -it / 6 * direction } +
+                                fadeOut(tween(120))) using
+                            SizeTransform(clip = false)
                     },
                     label = "signUpStep",
                 ) { target ->
                     Column(
                         modifier = Modifier.fillMaxWidth(),
-                        horizontalAlignment = Alignment.CenterHorizontally,
+                        horizontalAlignment = Alignment.Start,
                     ) {
                         when (target) {
                             SignUpStep.Name -> {
@@ -219,15 +224,17 @@ fun AuthScreen(
                                     selectedSeed = selectedSeed,
                                     onSelect = { selectedSeed = it },
                                 )
-                                Spacer(Modifier.height(8.dp))
-                                TextButton(
+                                Spacer(Modifier.height(12.dp))
+                                PickleButton(
+                                    text = stringResource(R.string.sign_up_shuffle),
                                     onClick = {
                                         avatarSeeds = DiceBear.randomSeeds()
                                         selectedSeed = null
                                     },
-                                ) {
-                                    Text(stringResource(R.string.sign_up_shuffle))
-                                }
+                                    style = PickleButtonStyle.Outline,
+                                    height = 36.dp,
+                                    modifier = Modifier.align(Alignment.End),
+                                )
                             }
 
                             SignUpStep.Email -> {
@@ -260,12 +267,7 @@ fun AuthScreen(
                     }
                 }
             } else {
-                Icon(
-                    painter = painterResource(R.drawable.pickle_logo),
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(40.dp),
-                )
+                PickleBrand()
                 Spacer(Modifier.height(24.dp))
                 StepHeader(
                     title = stringResource(R.string.log_in_title),
@@ -287,42 +289,32 @@ fun AuthScreen(
                 )
             }
             Spacer(Modifier.height(24.dp))
-            Button(
+            PickleButton(
+                text = when {
+                    !isSignUp -> stringResource(R.string.log_in)
+                    step == SignUpStep.Password -> stringResource(R.string.create_account)
+                    else -> stringResource(R.string.continue_button)
+                },
                 onClick = if (isSignUp) goNext else submit,
-                enabled = !isLoading && if (isSignUp) isStepValid else canSignIn,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.height(24.dp),
-                        color = MaterialTheme.colorScheme.onPrimary,
-                        strokeWidth = 2.dp,
-                    )
-                } else {
-                    Text(
-                        text = when {
-                            !isSignUp -> stringResource(R.string.log_in)
-                            step == SignUpStep.Password -> stringResource(R.string.create_account)
-                            else -> stringResource(R.string.continue_button)
-                        },
-                        style = MaterialTheme.typography.labelLarge,
-                        fontWeight = FontWeight.SemiBold,
-                    )
-                }
-            }
-            Spacer(Modifier.height(16.dp))
+                enabled = if (isSignUp) isStepValid else canSignIn,
+                loading = isLoading,
+                style = PickleButtonStyle.Teal,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(12.dp))
             TextButton(
                 onClick = {
                     isSignUp = !isSignUp
                     step = SignUpStep.Name
                 },
                 enabled = !isLoading,
+                modifier = Modifier.align(Alignment.CenterHorizontally),
             ) {
                 Text(
                     text = if (isSignUp) stringResource(R.string.switch_to_log_in)
                     else stringResource(R.string.switch_to_sign_up),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = Pickle.colors.textAccent,
                 )
             }
         }
@@ -332,18 +324,18 @@ fun AuthScreen(
 @Composable
 private fun StepIndicator(current: SignUpStep) {
     val total = SignUpStep.entries.size
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+    Column {
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
             SignUpStep.entries.forEach { s ->
                 val color by animateColorAsState(
-                    targetValue = if (s <= current) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.surfaceVariant,
+                    targetValue = if (s <= current) Pickle.colors.teal
+                    else Pickle.colors.sunken,
                     label = "stepDot",
                 )
                 Box(
                     modifier = Modifier
                         .height(6.dp)
-                        .width(if (s == current) 24.dp else 12.dp)
+                        .width(if (s == current) 32.dp else 16.dp)
                         .clip(CircleShape)
                         .background(color),
                 )
@@ -360,18 +352,12 @@ private fun StepIndicator(current: SignUpStep) {
 
 @Composable
 private fun StepHeader(title: String, subtitle: String) {
-    Text(
-        text = title,
-        style = MaterialTheme.typography.headlineSmall,
-        fontWeight = FontWeight.SemiBold,
-        textAlign = TextAlign.Center,
-    )
+    PickleHeadline(text = title)
     Spacer(Modifier.height(8.dp))
     Text(
         text = subtitle,
         style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        textAlign = TextAlign.Center,
+        color = Pickle.colors.inkMuted,
     )
     Spacer(Modifier.height(24.dp))
 }
@@ -384,13 +370,13 @@ private fun AvatarGrid(
 ) {
     val context = LocalContext.current
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        seeds.chunked(3).forEachIndexed { rowIndex, row ->
+        seeds.chunked(5).forEachIndexed { rowIndex, row ->
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 row.forEachIndexed { columnIndex, seed ->
                     val isSelected = seed == selectedSeed
                     val borderColor by animateColorAsState(
-                        targetValue = if (isSelected) MaterialTheme.colorScheme.primary
-                        else Color.Transparent,
+                        targetValue = if (isSelected) Pickle.colors.mustard
+                        else Pickle.colors.lineStrong,
                         label = "avatarBorder",
                     )
                     AsyncImage(
@@ -402,16 +388,15 @@ private fun AvatarGrid(
                         },
                         contentDescription = stringResource(
                             R.string.sign_up_avatar_cd,
-                            rowIndex * 3 + columnIndex + 1,
+                            rowIndex * 5 + columnIndex + 1,
                         ),
                         modifier = Modifier
                             .weight(1f)
                             .aspectRatio(1f)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.surface)
-                            .border(3.dp, borderColor, CircleShape)
-                            .clickable { onSelect(seed) }
-                            .padding(8.dp),
+                            .background(Pickle.colors.surface)
+                            .border(if (isSelected) 4.dp else PickleBorderWidth, borderColor, CircleShape)
+                            .clickable { onSelect(seed) },
                     )
                 }
             }

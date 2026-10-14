@@ -17,6 +17,8 @@ class MenuViewModel @Inject constructor(
 ) : ViewModel() {
 
     val currentUserId: String get() = authRepository.currentUserId ?: ""
+    val displayName: String? get() = authRepository.displayName
+    val avatarUrl: String? get() = authRepository.avatarUrl
 
     val polls = pollRepository.polls
     val notifications = notificationRepository.notifications
