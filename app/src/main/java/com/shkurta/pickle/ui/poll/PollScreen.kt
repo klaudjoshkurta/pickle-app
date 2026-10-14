@@ -750,7 +750,7 @@ private fun voteCountLabel(count: Int): String = if (count == 1) "1 vote" else "
 private fun sharePoll(context: Context, poll: Poll) {
     val intent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
-        putExtra(Intent.EXTRA_TEXT, "${poll.question}\nhttps://pickle.app/p/${poll.id}")
+        putExtra(Intent.EXTRA_TEXT, "${poll.question}\nhttps://pickle-web-iota.vercel.app/p/${poll.id}")
     }
     context.startActivity(Intent.createChooser(intent, null))
 }

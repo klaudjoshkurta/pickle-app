@@ -309,7 +309,7 @@ private fun MenuRow(
 private fun shareApp(context: Context) {
     val intent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
-        putExtra(Intent.EXTRA_TEXT, "Make group decisions with Pickle: https://pickle.app")
+        putExtra(Intent.EXTRA_TEXT, "Make group decisions with Pickle: https://pickle-web-iota.vercel.app")
     }
     context.startActivity(Intent.createChooser(intent, null))
 }
