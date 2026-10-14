@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -34,10 +36,19 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun signUp(email: String, password: String): Result<Unit> = runCatching {
+    override suspend fun signUp(
+        email: String,
+        password: String,
+        displayName: String,
+        avatarUrl: String,
+    ): Result<Unit> = runCatching {
         auth.signUpWith(Email) {
             this.email = email
             this.password = password
+            data = buildJsonObject {
+                put("display_name", displayName)
+                put("avatar_url", avatarUrl)
+            }
         }
     }
 

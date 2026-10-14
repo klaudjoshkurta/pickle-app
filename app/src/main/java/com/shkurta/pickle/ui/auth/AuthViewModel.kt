@@ -29,10 +29,10 @@ class AuthViewModel @Inject constructor(
         }
     }
 
-    fun signUp(email: String, password: String) {
+    fun signUp(email: String, password: String, displayName: String, avatarUrl: String) {
         _uiState.value = AuthUiState.Loading
         viewModelScope.launch {
-            authRepository.signUp(email, password)
+            authRepository.signUp(email, password, displayName, avatarUrl)
                 .onSuccess { _uiState.value = AuthUiState.Success }
                 .onFailure { _uiState.value = AuthUiState.Error(it.message ?: "Sign up failed") }
         }
