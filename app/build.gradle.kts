@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -21,9 +23,15 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // Supabase credentials — set in gradle.properties as supabase.url and supabase.anon.key
-        buildConfigField("String", "SUPABASE_URL", "\"${findProperty("supabase.url") ?: ""}\"")
-        buildConfigField("String", "SUPABASE_ANON_KEY", "\"${findProperty("supabase.anon.key") ?: ""}\"")
+        // Supabase credentials — set in local.properties as SUPABASE_URL and SUPABASE_ANON_KEY
+        val localProps = Properties()
+        rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { localProps.load(it) }
+        val supabaseUrl = localProps.getProperty("SUPABASE_URL")
+            ?: error("SUPABASE_URL missing from local.properties")
+        val supabaseAnonKey = localProps.getProperty("SUPABASE_ANON_KEY")
+            ?: error("SUPABASE_ANON_KEY missing from local.properties")
+        buildConfigField("String", "SUPABASE_URL", "\"$supabaseUrl\"")
+        buildConfigField("String", "SUPABASE_ANON_KEY", "\"$supabaseAnonKey\"")
     }
 
     buildTypes {
