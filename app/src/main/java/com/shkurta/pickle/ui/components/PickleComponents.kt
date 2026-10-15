@@ -141,13 +141,12 @@ fun CircleIconButton(
         shape = CircleShape,
         color = c.surface,
         contentColor = c.ink,
-        border = BorderStroke(PickleBorderWidth, c.lineStrong),
     ) {
         Box(contentAlignment = Alignment.Center) {
             Icon(
                 painter = painterResource(iconRes),
                 contentDescription = contentDescription,
-                modifier = Modifier.size(20.dp),
+                modifier = Modifier.size(24.dp),
             )
         }
     }
@@ -256,17 +255,12 @@ fun PickleHeadline(
     style: TextStyle = MaterialTheme.typography.headlineMedium,
     textAlign: TextAlign? = null,
 ) {
-    val offset = with(LocalDensity.current) { 2.dp.toPx() }
+
     Text(
         text = text,
         modifier = modifier,
         style = style.copy(
             color = Pickle.colors.ink,
-            shadow = Shadow(
-                color = Pickle.colors.mustard,
-                offset = Offset(offset, offset),
-                blurRadius = 0f,
-            ),
         ),
         textAlign = textAlign,
     )

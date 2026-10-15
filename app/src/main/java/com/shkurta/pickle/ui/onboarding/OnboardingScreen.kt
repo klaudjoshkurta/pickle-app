@@ -39,7 +39,7 @@ import androidx.compose.ui.unit.dp
 import com.shkurta.pickle.R
 import com.shkurta.pickle.ui.components.LocalActionsEnabled
 import com.shkurta.pickle.ui.theme.PickleTheme
-import com.shkurta.pickle.ui.theme.RubikFontFamily
+import com.shkurta.pickle.ui.theme.GoogleSansFontFamily
 
 private val OnboardingCream = Color(0xFFFAF3E3)
 private val OnboardingTeal = Color(0xFF22786A)
@@ -80,7 +80,7 @@ fun OnboardingScreen(
             Spacer(Modifier.height(16.dp))
             Text(
                 text = stringResource(R.string.onboarding_tagline),
-                fontFamily = RubikFontFamily,
+                fontFamily = GoogleSansFontFamily,
                 fontSize = 18.sp,
                 lineHeight = 24.sp,
                 color = OnboardingInk,
@@ -114,7 +114,7 @@ fun OnboardingScreen(
                             append(stringResource(R.string.log_in))
                         }
                     },
-                    fontFamily = RubikFontFamily,
+                    fontFamily = GoogleSansFontFamily,
                     fontSize = 13.sp,
                     lineHeight = 18.sp,
                     fontWeight = FontWeight.Medium,
@@ -143,7 +143,7 @@ private fun OnboardingButton(
     ) {
         Text(
             text = text,
-            fontFamily = RubikFontFamily,
+            fontFamily = GoogleSansFontFamily,
             fontSize = 16.sp,
             lineHeight = 22.sp,
             fontWeight = FontWeight.Medium,

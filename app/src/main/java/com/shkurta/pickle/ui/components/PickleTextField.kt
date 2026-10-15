@@ -69,11 +69,11 @@ fun PickleTextField(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 52.dp)
+                    .heightIn(min = 56.dp)
                     .background(c.surface, shape)
                     .border(
                         width = if (isFocused) 2.dp else PickleBorderWidth,
-                        color = if (isFocused) c.teal else c.lineStrong,
+                        color = if (isFocused) c.teal else MaterialTheme.colorScheme.surface,
                         shape = shape,
                     )
                     .padding(horizontal = 16.dp)

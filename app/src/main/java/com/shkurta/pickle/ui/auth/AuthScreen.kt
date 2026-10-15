@@ -65,6 +65,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
@@ -180,7 +181,6 @@ private fun AuthContent(
         ) {
             Spacer(Modifier.height(32.dp))
             if (isSignUp) {
-                StepIndicator(current = step)
                 Spacer(Modifier.height(24.dp))
                 AnimatedContent(
                     targetState = step,
@@ -206,6 +206,7 @@ private fun AuthContent(
                                     title = stringResource(R.string.sign_up_name_title),
                                     subtitle = stringResource(R.string.sign_up_name_subtitle),
                                 )
+                                Spacer(Modifier.height(40.dp))
                                 PickleTextField(
                                     value = name,
                                     onValueChange = onNameChange,
@@ -224,19 +225,29 @@ private fun AuthContent(
                                     title = stringResource(R.string.sign_up_avatar_title),
                                     subtitle = stringResource(R.string.sign_up_avatar_subtitle),
                                 )
-                                AvatarGrid(
-                                    seeds = avatarSeeds,
-                                    selectedSeed = selectedSeed,
-                                    onSelect = onSelectAvatar,
-                                )
-                                Spacer(Modifier.height(12.dp))
-                                PickleButton(
-                                    text = stringResource(R.string.sign_up_shuffle),
-                                    onClick = onShuffleAvatars,
-                                    style = PickleButtonStyle.Outline,
-                                    height = 36.dp,
-                                    modifier = Modifier.align(Alignment.End),
-                                )
+                                Spacer(Modifier.height(40.dp))
+                                Column(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                                ) {
+                                    AvatarGrid(
+                                        seeds = avatarSeeds,
+                                        selectedSeed = selectedSeed,
+                                        onSelect = onSelectAvatar,
+                                    )
+                                    TextButton(
+                                        onClick = onShuffleAvatars,
+                                        enabled = !isLoading,
+                                        modifier = Modifier.align(Alignment.CenterHorizontally),
+                                    ) {
+                                        Text(
+                                            text = stringResource(R.string.sign_up_shuffle),
+                                            style = MaterialTheme.typography.labelLarge,
+                                            color = Pickle.colors.textAccent,
+                                        )
+                                    }
+                                }
                             }
 
                             SignUpStep.Email -> {
@@ -321,44 +332,29 @@ private fun AuthContent(
 }
 
 @Composable
-private fun StepIndicator(current: SignUpStep) {
-    val total = SignUpStep.entries.size
-    Column {
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            SignUpStep.entries.forEach { s ->
-                val color by animateColorAsState(
-                    targetValue = if (s <= current) Pickle.colors.teal
-                    else Pickle.colors.sunken,
-                    label = "stepDot",
-                )
-                Box(
-                    modifier = Modifier
-                        .height(6.dp)
-                        .width(if (s == current) 32.dp else 16.dp)
-                        .clip(CircleShape)
-                        .background(color),
-                )
-            }
-        }
-        Spacer(Modifier.height(8.dp))
+private fun StepHeader(
+    modifier: Modifier = Modifier,
+    title: String,
+    subtitle: String
+) {
+    Column(
+        modifier = modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
         Text(
-            text = stringResource(R.string.sign_up_step, current.ordinal + 1, total),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            text = title,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Medium,
+            color = Pickle.colors.ink,
+        )
+        Text(
+            text = subtitle,
+            fontSize = 16.sp,
+            lineHeight = 24.sp,
+            color = Pickle.colors.inkMuted,
         )
     }
-}
-
-@Composable
-private fun StepHeader(title: String, subtitle: String) {
-    PickleHeadline(text = title)
-    Spacer(Modifier.height(8.dp))
-    Text(
-        text = subtitle,
-        style = MaterialTheme.typography.bodyMedium,
-        color = Pickle.colors.inkMuted,
-    )
-    Spacer(Modifier.height(24.dp))
 }
 
 @Composable
