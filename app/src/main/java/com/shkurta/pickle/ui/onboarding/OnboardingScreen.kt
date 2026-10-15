@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
@@ -67,7 +68,8 @@ fun OnboardingScreen(
             Image(
                 painter = painterResource(R.drawable.onboarding_image),
                 contentDescription = null,
-                modifier = Modifier.fillMaxWidth().aspectRatio(412f / 300f),
+                modifier = Modifier.fillMaxWidth(),
+                contentScale = ContentScale.Crop
             )
             Spacer(Modifier.weight(1f).heightIn(min = 36.dp))
             Image(
