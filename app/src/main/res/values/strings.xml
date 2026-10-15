@@ -1,4 +1,6 @@
 <resources>
+    <string name="onboarding_tagline">Make group decisions together.</string>
+    <string name="onboarding_create_poll">Create a poll</string>
     <string name="app_name" translatable="false">Pickle</string>
     <string name="onboarding_headline">"Can’t decide?\nLet the crew settle it."</string>
     <string name="onboarding_description">Share one link. Friends vote from their phones — no app, no account. You watch it land live.</string>
