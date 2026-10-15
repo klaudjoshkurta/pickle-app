@@ -5,6 +5,7 @@
 | Priority | Finding | Change |
 | --- | --- | --- |
 | P1 | Home refresh and most poll, notification, and sign-out coroutines allowed network/database errors to escape. This can terminate the Android process. | Screen action runner catches expected exceptions, preserves cancellation, exposes progress and sanitized retry messages, and suppresses overlapping actions. |
+| P1 | Follow-up device logs showed `DateTimeParseException` during Home refresh after sign-in. Actual PostgREST timestamps contain numeric offsets and microseconds; desktop fixtures previously used only `Z`. | All database timestamp parsing now uses `OffsetDateTime` with `ISO_OFFSET_DATE_TIME`, then converts to `Instant`. Added desktop and physical-device regression tests using real response formats. Updated the installed debug build without clearing app data and confirmed Home loads with no error. |
 | P1 | Supabase's option-insert policy resolved an unqualified `status` to the parent poll. Database logs recorded repeated insert-policy violations. | Applied migration `20261015090518_fix_option_insert_policy_and_client_privileges`; all option fields are explicitly qualified. |
 | P1 | Android created the poll and its options in separate requests. Failure could leave incomplete polls; retries could duplicate them. | Android now calls the deployed transactional `create_poll` RPC, retains a request UUID for an unchanged draft across retries/restoration, and uses the notification inserted by that transaction. |
 | P1 | Follow-up reads and notification requests could turn a committed write into an apparent failure. | Committed writes produce a distinct saved-but-refresh-failed state. The retry control refreshes instead of replaying that write. |
@@ -27,13 +28,16 @@ These findings establish plausible crash paths and a confirmed database failure.
 
 ## Android verification
 
-- Unit tests: 56 passed, 0 failed (36 existing tests plus 20 regression tests).
+- Unit tests: 60 passed, 0 failed (36 existing tests plus 24 regression tests).
+- Physical-device tests: both timestamp regression tests passed. Confirmed the signed-in Home screen is visible after restarting the updated app, the generic error is absent, and the new process has no `PickleAction` or `AndroidRuntime` error logs.
 - Android lint: 0 errors, 61 warnings, down from 66. The remaining warnings concern dependency updates (16), certificate-string typo suggestions (35), unused resources (9), and a redundant manifest label (1).
 - Debug APK: built successfully at `app/build/outputs/apk/debug/app-debug.apk`.
 - Release APK: built successfully at `app/build/outputs/apk/release/app-release-unsigned.apk`; signing is required for distribution.
 - Final combined Gradle validation completed successfully, including release R8 optimization and release lint checks. `git diff --check` passed.
 
-Device smoke tests remain unexecuted: ADB reports no connected device, and no configured AVD is available. Offline operation, rotation, full process restoration, and expired sessions still need an Android device pass. JVM tests cover the underlying failure handling, session guard, restoration inputs, and redirect decisions.
+At the original rollout no device was connected. During the follow-up, a physical phone became available and the timestamp tests and signed-in Home startup were verified on it. Offline operation, rotation, full process restoration, and expired sessions still need a broader Android device pass. JVM tests cover the underlying failure handling, session guard, restoration inputs, and redirect decisions.
+
+The offset-aware parser follows the [Android OffsetDateTime API](https://developer.android.com/reference/java/time/OffsetDateTime). Malformed timestamps remain recoverable data errors; valid database dates are preserved rather than rewritten.
 
 ## Remaining maintenance findings
 

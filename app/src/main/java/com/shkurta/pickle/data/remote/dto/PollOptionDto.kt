@@ -22,7 +22,7 @@ data class PollOptionDto(
         status = OptionStatus.valueOf(status),
         voteCount = voteCount,
         suggestedBy = suggestedBy,
-        createdAt = Instant.parse(createdAt),
+        createdAt = parseDatabaseInstant(createdAt),
     )
 }
 

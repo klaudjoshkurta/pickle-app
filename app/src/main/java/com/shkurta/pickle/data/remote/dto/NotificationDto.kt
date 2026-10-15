@@ -23,7 +23,7 @@ data class NotificationDto(
         pollId = pollId,
         pollQuestion = pollQuestion,
         detail = detail,
-        createdAt = Instant.parse(createdAt),
+        createdAt = parseDatabaseInstant(createdAt),
         isRead = isRead,
     )
 }

@@ -35,8 +35,8 @@ data class PollDto(
             allowVoteChange = allowVoteChange,
         ),
         status = PollStatus.valueOf(status),
-        createdAt = Instant.parse(createdAt),
-        closedAt = closedAt?.let { Instant.parse(it) },
+        createdAt = parseDatabaseInstant(createdAt),
+        closedAt = closedAt?.let { parseDatabaseInstant(it) },
         winnerOptionId = winnerOptionId,
         expectedVoters = expectedVoters,
     )

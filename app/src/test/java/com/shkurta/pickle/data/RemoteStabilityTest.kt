@@ -28,9 +28,9 @@ class RemoteStabilityTest {
     private val headers = headersOf(HttpHeaders.ContentType, "application/json")
     private val pollJson = """[{"id":"poll","question":"Dinner?","creator_id":"creator",
         "allow_suggestions":true,"require_approval":true,"show_results_before_voting":false,
-        "allow_vote_change":true,"status":"OPEN","created_at":"2026-10-15T00:00:00Z",
-        "poll_options":[{"id":"a","poll_id":"poll","text":"Pizza","status":"APPROVED","created_at":"2026-10-15T00:00:00Z"},
-        {"id":"b","poll_id":"poll","text":"Pasta","status":"APPROVED","created_at":"2026-10-15T00:00:00Z"}]}]"""
+        "allow_vote_change":true,"status":"OPEN","created_at":"2026-10-15T00:00:00.123456+00:00",
+        "poll_options":[{"id":"a","poll_id":"poll","text":"Pizza","status":"APPROVED","created_at":"2026-10-15T00:00:00.123456+00:00"},
+        {"id":"b","poll_id":"poll","text":"Pasta","status":"APPROVED","created_at":"2026-10-15T00:00:00.123456+00:00"}]}]"""
 
     @Test fun offlineDemoDoesNotSendAnyNetworkRequestsAndWritesRequireSignIn() = runTest {
         auth.currentUserId = null; auth.session.value = AuthSession(true)

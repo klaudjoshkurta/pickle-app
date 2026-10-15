@@ -40,7 +40,7 @@ class SupabasePollRepository @Inject constructor(
         val session = authRepository.session.value
         val userId = session.userId ?: throw SignInRequiredException()
         var result = fetchPolls()
-        val expired = result.filter { it.status == "OPEN" && it.closedAt?.let(Instant::parse)?.isBefore(Instant.now()) == true }
+        val expired = result.filter { it.status == "OPEN" && it.closedAt?.let(::parseDatabaseInstant)?.isBefore(Instant.now()) == true }
         for (poll in expired) postgrest.rpc("expire_poll", buildJsonObject { put("p_poll_id", poll.id) })
         if (expired.isNotEmpty()) result = fetchPolls()
         // Parse everything before publishing, so bad rows preserve the last good snapshot.
