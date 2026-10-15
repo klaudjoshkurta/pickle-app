@@ -1,5 +1,6 @@
 package com.shkurta.pickle.ui.create
 
+import com.shkurta.pickle.ui.components.ActionFrame
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -80,18 +81,21 @@ fun CreatePollScreen(
         }
     }
 
-    CreatePollContent(
-        state = state,
-        onBack = onBack,
-        onCreate = viewModel::createPoll,
-        onQuestionChange = viewModel::setQuestion,
-        onOptionChange = viewModel::setOption,
-        onAddOption = viewModel::addOption,
-        onRemoveOption = viewModel::removeOption,
-        onSettingsChange = viewModel::setSettings,
-        onDeadlineChange = viewModel::setDeadline,
-        onExpectedVotersChange = viewModel::setExpectedVoters,
-    )
+    val action by viewModel.actionState.collectAsStateWithLifecycle()
+    ActionFrame(action, viewModel::retry) {
+        CreatePollContent(
+            state = state,
+            onBack = onBack,
+            onCreate = viewModel::createPoll,
+            onQuestionChange = viewModel::setQuestion,
+            onOptionChange = viewModel::setOption,
+            onAddOption = viewModel::addOption,
+            onRemoveOption = viewModel::removeOption,
+            onSettingsChange = viewModel::setSettings,
+            onDeadlineChange = viewModel::setDeadline,
+            onExpectedVotersChange = viewModel::setExpectedVoters,
+        )
+    }
 }
 
 @Composable

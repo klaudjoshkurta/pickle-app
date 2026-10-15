@@ -1,5 +1,6 @@
 package com.shkurta.pickle.ui.home
 
+import com.shkurta.pickle.ui.components.ActionFrame
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -51,14 +52,17 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
-    HomeContent(
-        state = state,
-        onFilterChange = viewModel::selectFilter,
-        onPollClick = onPollClick,
-        onCreateClick = onCreateClick,
-        onNotificationsClick = onNotificationsClick,
-        onMenuClick = onMenuClick,
-    )
+    val action by viewModel.actionState.collectAsStateWithLifecycle()
+    ActionFrame(action, viewModel::retry) {
+        HomeContent(
+            state = state,
+            onFilterChange = viewModel::selectFilter,
+            onPollClick = onPollClick,
+            onCreateClick = onCreateClick,
+            onNotificationsClick = onNotificationsClick,
+            onMenuClick = onMenuClick,
+        )
+    }
 }
 
 @Composable
@@ -92,6 +96,7 @@ private fun HomeContent(
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
+            if (state.isDemo) item(key = "demo") { Text("Offline demo · Sign in to use live polls") }
             item(key = "greeting") {
                 Column {
                     PickleHeadline(text = greeting(state.displayName))
@@ -124,7 +129,7 @@ private fun HomeContent(
                 PollCard(
                     poll = poll,
                     onClick = { onPollClick(poll.id) },
-                    onShareClick = { sharePoll(context, poll) },
+                    onShareClick = { if (!state.isDemo) sharePoll(context, poll) },
                 )
             }
         }

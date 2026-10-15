@@ -1,5 +1,6 @@
 package com.shkurta.pickle.ui.poll
 
+import com.shkurta.pickle.ui.components.ActionFrame
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
@@ -93,32 +94,43 @@ private const val MAX_METER_BLOCKS = 12
 @Composable
 fun PollScreen(
     onBack: () -> Unit,
+    isDemo: Boolean = false,
+    onSignIn: () -> Unit = {},
     viewModel: PollViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val poll = state.poll
     val context = LocalContext.current
 
-    if (poll == null) {
-        PollNotFound(onBack = onBack)
-        return
-    }
+    val action by viewModel.actionState.collectAsStateWithLifecycle()
+    ActionFrame(action, viewModel::retry) {
+        Column {
+            if (isDemo) {
+                Text("Offline demo · Sample results")
+                PickleButton(text = "Sign in to use live polls", onClick = onSignIn)
+            }
+            if (poll == null || poll.options.size < com.shkurta.pickle.domain.model.MIN_POLL_OPTIONS) {
+                PollNotFound(onBack = onBack, onRefresh = viewModel::refresh)
+                return@ActionFrame
+            }
 
-    PollContent(
-        state = state,
-        onBack = onBack,
-        onShare = { sharePoll(context, poll) },
-        onVote = viewModel::vote,
-        onSelectOption = viewModel::selectOption,
-        onChangeVote = viewModel::changeVote,
-        onKeepVote = viewModel::keepVote,
-        onSuggest = { text ->
-            viewModel.suggestOption(text)
-        },
-        onClearSuggestionStatus = { viewModel.clearSuggestionStatus() },
-        onModerate = { optionId, approve -> viewModel.moderate(optionId, approve) },
-        onClose = { viewModel.close() },
-    )
+            PollContent(
+                state = if (isDemo) state.copy(isDemo = true, isCreator = false) else state,
+                onBack = onBack,
+                onShare = { if (!isDemo) sharePoll(context, poll) },
+                onVote = viewModel::vote,
+                onSelectOption = viewModel::selectOption,
+                onChangeVote = viewModel::changeVote,
+                onKeepVote = viewModel::keepVote,
+                onSuggest = { text ->
+                    viewModel.suggestOption(text)
+                },
+                onClearSuggestionStatus = { viewModel.clearSuggestionStatus() },
+                onModerate = { optionId, approve -> viewModel.moderate(optionId, approve) },
+                onClose = { viewModel.close() },
+            )
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -265,7 +277,7 @@ private fun PollContent(
                     }
                 }
 
-                if (!isVoting && isOpen && poll.settings.allowSuggestions && !isCreator) {
+                if (!state.isDemo && !isVoting && isOpen && poll.settings.allowSuggestions && !isCreator) {
                     item(key = "suggest_after") {
                         SuggestOption(
                             lastSuggestionStatus = lastSuggestionStatus,
@@ -994,6 +1006,7 @@ private fun EndVotingSheet(
 @Composable
 private fun PollNotFound(
     onBack: () -> Unit,
+    onRefresh: () -> Unit,
 ) {
     Scaffold(
         containerColor = Pickle.colors.canvas,
@@ -1010,11 +1023,14 @@ private fun PollNotFound(
                 .padding(innerPadding),
             contentAlignment = Alignment.Center,
         ) {
-            Text(
-                text = "Poll not found",
-                style = MaterialTheme.typography.titleMedium,
-                color = Pickle.colors.inkMuted,
-            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = "Poll unavailable",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = Pickle.colors.inkMuted,
+                )
+                PickleButton(text = "Refresh", onClick = onRefresh)
+            }
         }
     }
 }

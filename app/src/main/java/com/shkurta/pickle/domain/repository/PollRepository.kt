@@ -17,6 +17,7 @@ interface PollRepository {
         closesAt: Instant?,
         expectedVoters: Int?,
         creatorId: String,
+        requestId: String = java.util.UUID.randomUUID().toString(),
     ): Poll?
 
     suspend fun refresh()

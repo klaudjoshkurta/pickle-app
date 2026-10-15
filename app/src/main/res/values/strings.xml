@@ -5,7 +5,7 @@
     <string name="onboarding_hero_label">Pizza night · in the lead</string>
     <string name="onboarding_hero_option">Detroit-style from Emmy’s</string>
     <string name="onboarding_hero_votes">of 11 votes</string>
-    <string name="onboarding_guest_note">Guest mode lets you poke around before signing up.</string>
+    <string name="onboarding_guest_note">Explore sample polls offline. Sign in to create polls and vote.</string>
     <string name="create_account">Create an account</string>
     <string name="try_it">Try it as a guest</string>
     <string name="already_have_an_account">"Already have an account? "</string>

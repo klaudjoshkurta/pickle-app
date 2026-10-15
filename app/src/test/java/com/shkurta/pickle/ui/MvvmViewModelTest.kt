@@ -34,12 +34,12 @@ class MvvmViewModelTest {
         AuthViewModel(handle, SignInUseCase(auth), SignUpUseCase(auth), ObserveAuthenticationUseCase(auth))
 
     private fun createViewModel(handle: SavedStateHandle = SavedStateHandle()) =
-        CreatePollViewModel(handle, CreatePollUseCase(polls, auth))
+        CreatePollViewModel(handle, CreatePollUseCase(polls, auth), RefreshPollsUseCase(polls), RefreshNotificationsUseCase(notifications))
 
     private fun pollViewModel(handle: SavedStateHandle = SavedStateHandle(mapOf("pollId" to "poll"))) =
         PollViewModel(handle, ObservePollUseCase(polls), ObserveMyVotesUseCase(polls),
             ObserveAuthenticationUseCase(auth), GetCurrentUserUseCase(auth), VoteUseCase(polls),
-            SuggestOptionUseCase(polls, auth), ModerateOptionUseCase(polls), ClosePollUseCase(polls))
+            SuggestOptionUseCase(polls, auth), ModerateOptionUseCase(polls), ClosePollUseCase(polls), RefreshPollsUseCase(polls))
 
     private fun <T> TestScope.subscribe(state: StateFlow<T>) {
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { state.collect() }
@@ -97,7 +97,7 @@ class MvvmViewModelTest {
         assertEquals(AuthStatus.Loading, vm.uiState.value.status)
         runCurrent()
         assertEquals("alex@example.com", auth.lastEmail)
-        assertEquals(AuthStatus.Error("Invalid credentials"), vm.uiState.value.status)
+        assertEquals(AuthStatus.Error("Sign in failed. Check your connection and credentials."), vm.uiState.value.status)
         vm.clearError()
         assertEquals(AuthStatus.Idle, vm.uiState.value.status)
         auth.result = Result.success(Unit)
@@ -157,7 +157,7 @@ class MvvmViewModelTest {
         auth.result = Result.failure(IllegalStateException("Email already registered"))
         vm.submit()
         runCurrent()
-        assertEquals(AuthStatus.Error("Email already registered"), vm.uiState.value.status)
+        assertEquals(AuthStatus.Error("Sign up failed. Check your connection and account details."), vm.uiState.value.status)
     }
 
     @Test fun avatarUrlPreservesQueryEscaping() {
@@ -262,8 +262,11 @@ class MvvmViewModelTest {
     @Test fun pollSuggestionsModerationAndClosingUseCorrectPollId() = runTest {
         val vm = pollViewModel()
         subscribe(vm.uiState)
+        runCurrent()
         vm.suggestOption("Soup")
+        runCurrent()
         vm.moderate("suggestion", true)
+        runCurrent()
         vm.close()
         runCurrent()
         assertEquals(OptionStatus.PENDING, vm.uiState.value.lastSuggestionStatus)
@@ -295,8 +298,9 @@ class MvvmViewModelTest {
 
     @Test fun notificationActionsUpdateStateWithoutMarkingUnrelatedItemsRead() = runTest {
         val vm = NotificationsViewModel(ObserveNotificationsUseCase(notifications),
-            MarkNotificationReadUseCase(notifications), MarkAllNotificationsReadUseCase(notifications))
+            MarkNotificationReadUseCase(notifications), MarkAllNotificationsReadUseCase(notifications), RefreshNotificationsUseCase(notifications))
         subscribe(vm.uiState)
+        runCurrent()
         vm.markRead("one")
         runCurrent()
         assertTrue(vm.uiState.value.notifications.first().isRead)

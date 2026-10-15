@@ -1,6 +1,8 @@
 package com.shkurta.pickle.data.auth
 
 import com.shkurta.pickle.domain.repository.AuthRepository
+import com.shkurta.pickle.domain.repository.AuthSession
+import com.shkurta.pickle.domain.model.cancellationSafeResult
 
 import io.github.jan.supabase.auth.Auth
 import io.github.jan.supabase.auth.providers.builtin.Email
@@ -26,11 +28,14 @@ class AuthRepositoryImpl @Inject constructor(
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
 
+    private val _session = MutableStateFlow(AuthSession())
+    override val session = _session.asStateFlow()
+
     private val _isAuthenticated = MutableStateFlow(false)
     override val isAuthenticated: StateFlow<Boolean> = _isAuthenticated.asStateFlow()
 
     override val currentUserId: String?
-        get() = auth.currentUserOrNull()?.id
+        get() = session.value.userId
 
     override val displayName: String?
         get() = metadataString("display_name")
@@ -38,15 +43,21 @@ class AuthRepositoryImpl @Inject constructor(
     override val avatarUrl: String?
         get() = metadataString("avatar_url")
 
-    private fun metadataString(key: String): String? =
-        (auth.currentUserOrNull()?.userMetadata?.get(key) as? JsonPrimitive)
-            ?.contentOrNull
-            ?.takeIf { it.isNotBlank() }
+    private fun metadataString(key: String): String? {
+        val user = auth.currentUserOrNull()?.takeIf { it.id == session.value.userId } ?: return null
+        return (user.userMetadata?.get(key) as? JsonPrimitive)?.contentOrNull?.takeIf { it.isNotBlank() }
+    }
 
     init {
         scope.launch {
             auth.sessionStatus.collect { status ->
-                _isAuthenticated.value = status is SessionStatus.Authenticated
+                val userId = when (status) {
+                    is SessionStatus.Authenticated -> status.session.user?.id
+                    is SessionStatus.NotAuthenticated, is SessionStatus.Initializing -> null
+                    else -> _session.value.userId ?: auth.currentUserOrNull()?.id // Keep the account during transient refresh failures.
+                }
+                _session.value = AuthSession(status !is SessionStatus.Initializing, userId)
+                _isAuthenticated.value = userId != null
             }
         }
     }
@@ -56,7 +67,7 @@ class AuthRepositoryImpl @Inject constructor(
         password: String,
         displayName: String,
         avatarUrl: String,
-    ): Result<Unit> = runCatching {
+    ): Result<Unit> = cancellationSafeResult {
         auth.signUpWith(Email) {
             this.email = email
             this.password = password
@@ -67,7 +78,7 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun signIn(email: String, password: String): Result<Unit> = runCatching {
+    override suspend fun signIn(email: String, password: String): Result<Unit> = cancellationSafeResult {
         auth.signInWith(Email) {
             this.email = email
             this.password = password
@@ -75,6 +86,6 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun signOut() {
-        auth.signOut()
+        if (currentUserId != null) auth.signOut()
     }
 }

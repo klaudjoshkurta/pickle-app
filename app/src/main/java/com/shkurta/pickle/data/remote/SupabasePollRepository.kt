@@ -1,29 +1,20 @@
 package com.shkurta.pickle.data.remote
 
-import com.shkurta.pickle.domain.repository.NotificationRepository
-import com.shkurta.pickle.domain.repository.PollRepository
-import com.shkurta.pickle.domain.repository.AuthRepository
-import com.shkurta.pickle.domain.model.MIN_POLL_OPTIONS
-import com.shkurta.pickle.domain.model.distinctOptionTexts
-import com.shkurta.pickle.data.remote.dto.CreateOptionDto
-import com.shkurta.pickle.data.remote.dto.CreatePollDto
-import com.shkurta.pickle.data.remote.dto.PollDto
-import com.shkurta.pickle.data.remote.dto.PollOptionDto
-import com.shkurta.pickle.data.remote.dto.VoteDto
-import com.shkurta.pickle.domain.model.NotificationType
-import com.shkurta.pickle.domain.model.OptionStatus
-import com.shkurta.pickle.domain.model.Outcome
-import com.shkurta.pickle.domain.model.Poll
-import com.shkurta.pickle.domain.model.PollSettings
-import com.shkurta.pickle.domain.model.toResults
+import com.shkurta.pickle.data.auth.AccountCache
+import com.shkurta.pickle.data.auth.SessionGuard
+import com.shkurta.pickle.data.remote.dto.*
+import com.shkurta.pickle.data.sample.SamplePolls
+import com.shkurta.pickle.domain.repository.*
+import com.shkurta.pickle.domain.model.*
 import io.github.jan.supabase.postgrest.Postgrest
 import io.github.jan.supabase.postgrest.query.Columns
+import io.github.jan.supabase.postgrest.query.Order
 import io.github.jan.supabase.postgrest.rpc
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.serialization.json.buildJsonObject
-import kotlinx.serialization.json.put
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.serialization.json.*
+import java.time.Instant
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -32,156 +23,120 @@ class SupabasePollRepository @Inject constructor(
     private val postgrest: Postgrest,
     private val authRepository: AuthRepository,
     private val notificationRepository: NotificationRepository,
+    private val guard: SessionGuard,
 ) : PollRepository {
+    private val pollCache = AccountCache(authRepository, emptyList<Poll>(), SamplePolls.all)
+    private val voteCache = AccountCache(authRepository, emptyMap<String, String>())
+    override val polls = pollCache.state
+    override val myVotes = voteCache.state
+    private val refreshMutex = Mutex()
 
-    private val _polls = MutableStateFlow<List<Poll>>(emptyList())
-    override val polls: StateFlow<List<Poll>> = _polls.asStateFlow()
-
-    private val _myVotes = MutableStateFlow<Map<String, String>>(emptyMap())
-    override val myVotes: StateFlow<Map<String, String>> = _myVotes.asStateFlow()
-
-    override suspend fun refresh() = refreshPolls()
-
-    private suspend fun refreshPolls() {
-        val result = postgrest.from("polls")
-            .select(columns = Columns.raw("*, poll_options(*)")) {
-                order("created_at", io.github.jan.supabase.postgrest.query.Order.DESCENDING)
-            }
-            .decodeList<PollDto>()
-
-        _polls.value = result.map { it.toDomain() }
-
-        // Also refresh my votes
-        val userId = authRepository.currentUserId ?: return
-        val votes = postgrest.from("votes")
-            .select {
-                filter { eq("voter_id", userId) }
-            }
-            .decodeList<VoteDto>()
-
-        _myVotes.value = votes.associate { it.pollId to it.optionId }
+    override suspend fun refresh() {
+        if (guard.ready().userId == null) return // The demo never calls the database.
+        guard.authenticated { refreshPolls() }
     }
+
+    private suspend fun refreshPolls() = refreshMutex.withLock {
+        val session = authRepository.session.value
+        val userId = session.userId ?: throw SignInRequiredException()
+        var result = fetchPolls()
+        val expired = result.filter { it.status == "OPEN" && it.closedAt?.let(Instant::parse)?.isBefore(Instant.now()) == true }
+        for (poll in expired) postgrest.rpc("expire_poll", buildJsonObject { put("p_poll_id", poll.id) })
+        if (expired.isNotEmpty()) result = fetchPolls()
+        // Parse everything before publishing, so bad rows preserve the last good snapshot.
+        val mapped = try { result.map { it.toDomain() } } catch (e: RuntimeException) {
+            throw InvalidRemoteDataException()
+        }
+        val votes = postgrest.from("votes").select { filter { eq("voter_id", userId) } }.decodeList<VoteDto>()
+        pollCache.publish(session, mapped)
+        voteCache.publish(session, votes.associate { it.pollId to it.optionId })
+    }
+
+    private suspend fun fetchPolls() = postgrest.from("polls")
+        .select(columns = Columns.raw("*, poll_options(*)")) { order("created_at", Order.DESCENDING) }
+        .decodeList<PollDto>()
 
     override suspend fun createPoll(
-        question: String,
-        optionTexts: List<String>,
-        settings: PollSettings,
-        closesAt: java.time.Instant?,
-        expectedVoters: Int?,
-        creatorId: String,
-    ): Poll? {
-        val trimmedQuestion = question.trim()
-        val texts = distinctOptionTexts(optionTexts)
-        if (trimmedQuestion.isEmpty() || texts.size < MIN_POLL_OPTIONS) return null
-
-        val pollDto = CreatePollDto(
-            question = trimmedQuestion,
-            creatorId = creatorId,
-            allowSuggestions = settings.allowSuggestions,
-            requireApproval = settings.requireApproval,
-            showResultsBeforeVoting = settings.showResultsBeforeVoting,
-            allowVoteChange = settings.allowVoteChange,
-            closedAt = closesAt?.toString(),
-            expectedVoters = expectedVoters?.takeIf { it > 0 },
-        )
-
-        val insertedPoll = postgrest.from("polls")
-            .insert(pollDto) { select() }
-            .decodeSingle<PollDto>()
-
-        val options = texts.map { text ->
-            CreateOptionDto(pollId = insertedPoll.id, text = text)
+        question: String, optionTexts: List<String>, settings: PollSettings,
+        closesAt: Instant?, expectedVoters: Int?, creatorId: String, requestId: String,
+    ): Poll? = guard.authenticated { userId ->
+        if (creatorId != userId) throw SignInRequiredException()
+        if (!isValidPollInput(question, optionTexts)) return@authenticated null
+        // The UI offers fixed durations; the server calculates the deadline using its own clock.
+        val seconds = closesAt?.let { deadline ->
+            val remaining = java.time.Duration.between(Instant.now(), deadline).seconds
+            listOf(3600, 86400, 259200, 604800).minBy { kotlin.math.abs(it.toLong() - remaining) }
         }
-        postgrest.from("poll_options").insert(options)
-
-        refreshPolls()
-        val poll = _polls.value.firstOrNull { it.id == insertedPoll.id }
-
-        if (poll != null) {
-            notificationRepository.add(NotificationType.POLL_CREATED, poll)
+        val id = postgrest.rpc("create_poll", buildJsonObject {
+            put("p_question", question.trim())
+            put("p_options", JsonArray(distinctOptionTexts(optionTexts).map(::JsonPrimitive)))
+            put("p_allow_suggestions", settings.allowSuggestions)
+            put("p_require_approval", settings.requireApproval)
+            put("p_show_results_before_voting", settings.showResultsBeforeVoting)
+            put("p_allow_vote_change", settings.allowVoteChange)
+            put("p_deadline_seconds", seconds?.let(::JsonPrimitive) ?: JsonNull)
+            put("p_expected_voters", expectedVoters?.let(::JsonPrimitive) ?: JsonNull)
+            put("p_request_id", requestId)
+        }).decodeAs<String>()
+        followUp(id) {
+            refreshPolls()
+            notificationRepository.refresh() // create_poll already inserted the notification atomically.
         }
-
-        return poll
+        polls.value.firstOrNull { it.id == id } ?: throw SavedRefreshException(id)
     }
 
-    override suspend fun vote(pollId: String, optionId: String) {
-        postgrest.rpc("cast_vote", buildJsonObject {
-            put("p_poll_id", pollId)
-            put("p_option_id", optionId)
-        })
-        refreshPolls()
+    override suspend fun vote(pollId: String, optionId: String) = guard.authenticated {
+        postgrest.rpc("cast_vote", buildJsonObject { put("p_poll_id", pollId); put("p_option_id", optionId) })
+        followUp { refreshPolls() }
     }
 
-    override suspend fun suggestOption(pollId: String, text: String, userId: String): OptionStatus? {
-        val poll = _polls.value.firstOrNull { it.id == pollId } ?: return null
-        if (!poll.settings.allowSuggestions) return null
-
+    override suspend fun suggestOption(pollId: String, text: String, userId: String): OptionStatus? = guard.authenticated { currentUser ->
+        if (userId != currentUser) throw SignInRequiredException()
+        val poll = polls.value.firstOrNull { it.id == pollId } ?: return@authenticated null
+        if (!poll.isOpen() || !poll.settings.allowSuggestions || text.isBlank()) return@authenticated null
         val trimmed = text.trim()
-        if (trimmed.isEmpty()) return null
-
-        val isDuplicate = poll.options.any {
-            it.status != OptionStatus.REJECTED && it.text.equals(trimmed, ignoreCase = true)
+        if (poll.options.any { it.status != OptionStatus.REJECTED && it.text.equals(trimmed, true) }) return@authenticated null
+        val isCreator = poll.isCreator(currentUser)
+        val status = if (poll.settings.requireApproval && !isCreator) OptionStatus.PENDING else OptionStatus.APPROVED
+        postgrest.from("poll_options").insert(CreateOptionDto(pollId, trimmed, status.name, currentUser.takeUnless { isCreator }))
+        followUp {
+            refreshPolls()
+            if (status == OptionStatus.PENDING) notificationRepository.add(NotificationType.SUGGESTION_RECEIVED, poll, trimmed)
         }
-        if (isDuplicate) return null
-
-        val isCreator = poll.isCreator(userId)
-        val status = if (poll.settings.requireApproval && !isCreator) "PENDING" else "APPROVED"
-
-        val option = CreateOptionDto(
-            pollId = pollId,
-            text = trimmed,
-            status = status,
-            suggestedBy = userId.takeUnless { isCreator },
-        )
-        postgrest.from("poll_options").insert(option)
-
-        refreshPolls()
-
-        val optionStatus = OptionStatus.valueOf(status)
-        if (optionStatus == OptionStatus.PENDING) {
-            notificationRepository.add(NotificationType.SUGGESTION_RECEIVED, poll, trimmed)
-        }
-        return optionStatus
+        status
     }
 
-    override suspend fun moderate(pollId: String, optionId: String, approve: Boolean) {
-        val poll = _polls.value.firstOrNull { it.id == pollId } ?: return
-        val suggestion = poll.pendingSuggestions.firstOrNull { it.id == optionId } ?: return
-        val newStatus = if (approve) "APPROVED" else "REJECTED"
-
-        postgrest.from("poll_options").update({
-            set("status", newStatus)
-        }) {
-            filter { eq("id", optionId) }
-        }
-
-        refreshPolls()
-
-        notificationRepository.add(
-            type = if (approve) NotificationType.SUGGESTION_APPROVED else NotificationType.SUGGESTION_REJECTED,
-            poll = poll,
-            detail = suggestion.text,
-        )
-    }
-
-    override suspend fun close(pollId: String) {
-        val poll = _polls.value.firstOrNull { it.id == pollId } ?: return
-        val outcome = poll.toResults().outcome
-
-        postgrest.rpc("close_poll", buildJsonObject {
-            put("p_poll_id", pollId)
+    override suspend fun moderate(pollId: String, optionId: String, approve: Boolean) = guard.authenticated {
+        val poll = polls.value.firstOrNull { it.id == pollId }
+        val text = poll?.pendingSuggestions?.firstOrNull { it.id == optionId }?.text
+        postgrest.rpc("moderate_option", buildJsonObject {
+            put("p_poll_id", pollId); put("p_option_id", optionId); put("p_approve", approve)
         })
+        followUp {
+            refreshPolls()
+            if (poll != null) notificationRepository.add(
+                if (approve) NotificationType.SUGGESTION_APPROVED else NotificationType.SUGGESTION_REJECTED, poll, text,
+            )
+        }
+    }
 
-        refreshPolls()
+    override suspend fun close(pollId: String) = guard.authenticated {
+        postgrest.rpc("close_poll", buildJsonObject { put("p_poll_id", pollId) })
+        followUp {
+            refreshPolls()
+            polls.value.firstOrNull { it.id == pollId }?.let { poll ->
+                notificationRepository.add(NotificationType.POLL_CLOSED, poll, when (val outcome = poll.toResults().outcome) {
+                    Outcome.NoVotes -> "No votes"
+                    is Outcome.Winner -> "Winner: ${outcome.option.text}"
+                    is Outcome.Tie -> "Tie: ${outcome.options.joinToString(" · ") { it.text }}"
+                })
+            }
+        }
+    }
 
-        notificationRepository.add(
-            type = NotificationType.POLL_CLOSED,
-            poll = poll,
-            detail = when (outcome) {
-                Outcome.NoVotes -> "No votes"
-                is Outcome.Winner -> "Winner: ${outcome.option.text}"
-                is Outcome.Tie -> "Tie: ${outcome.options.joinToString(" · ") { it.text }}"
-            },
-        )
+    private suspend fun followUp(savedId: String? = null, block: suspend () -> Unit) {
+        try { block() }
+        catch (e: CancellationException) { throw e }
+        catch (e: Exception) { throw SavedRefreshException(savedId) }
     }
 }

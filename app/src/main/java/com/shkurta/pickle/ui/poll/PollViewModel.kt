@@ -1,5 +1,6 @@
 package com.shkurta.pickle.ui.poll
 
+import com.shkurta.pickle.ui.components.ActionRunner
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -25,10 +26,10 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class PollUiState(
+    val isDemo: Boolean = false,
     val poll: Poll? = null,
     val myVoteOptionId: String? = null,
     val lastSuggestionStatus: OptionStatus? = null,
@@ -40,8 +41,8 @@ data class PollUiState(
     val pendingSuggestions: List<PollOption> = emptyList(),
 ) {
     val hasVoted: Boolean get() = myVoteOptionId != null
-    val showResults: Boolean get() = poll != null && (hasVoted || poll.settings.showResultsBeforeVoting || !isOpen)
-    val canVote: Boolean get() = isOpen && (!hasVoted || poll?.settings?.allowVoteChange == true)
+    val showResults: Boolean get() = poll != null && (isDemo || hasVoted || poll.settings.showResultsBeforeVoting || !isOpen)
+    val canVote: Boolean get() = !isDemo && isOpen && (!hasVoted || poll?.settings?.allowVoteChange == true)
     val isVoting: Boolean get() = canVote && (!hasVoted || isChangingVote)
     val showResultsSection: Boolean get() = showResults && (!isVoting || (results?.totalVotes ?: 0) > 0)
     val selectedOption: PollOption? get() = poll?.approvedOptions?.firstOrNull { it.id == selectedOptionId }
@@ -89,7 +90,10 @@ class PollViewModel @Inject constructor(
     private val suggestOptionUseCase: SuggestOptionUseCase,
     private val moderateOptionUseCase: ModerateOptionUseCase,
     private val closePollUseCase: ClosePollUseCase,
+    private val refreshPolls: com.shkurta.pickle.domain.usecases.poll.RefreshPollsUseCase,
 ) : ViewModel() {
+    private val actions = ActionRunner(viewModelScope)
+    val actionState = actions.state
     private val pollId = requireNotNull(savedStateHandle.get<String>("pollId")) {
         "Missing pollId navigation argument"
     }
@@ -100,7 +104,7 @@ class PollViewModel @Inject constructor(
     private val suggestionStatus = MutableStateFlow<OptionStatus?>(null)
     private val interaction = combine(selectedOption, changingVote, suggestionStatus, ::PollInteraction)
 
-    val uiState = combine(observePoll(pollId), votes, observeAuthentication(), interaction) {
+    val uiState = combine(observePoll(pollId), votes, observeAuthentication.session, interaction) {
             poll, myVotes, _, actions ->
         PollUiState.from(
             poll, getCurrentUser().userId ?: "", myVotes[pollId],
@@ -108,7 +112,11 @@ class PollViewModel @Inject constructor(
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), PollUiState())
 
+    fun refresh() = actions.run { refreshPolls() }
+    fun retry() = actions.retry(::refresh)
+
     init {
+        refresh()
         votes.map { it[pollId] }.distinctUntilChanged().onEach { vote ->
             if (vote != previousVote) {
                 previousVote = vote
@@ -126,15 +134,17 @@ class PollViewModel @Inject constructor(
     }
     fun vote() {
         val optionId = selectedOption.value ?: return
-        savedStateHandle["isChangingVote"] = false
-        viewModelScope.launch { voteUseCase(pollId, optionId) }
+        actions.run {
+            voteUseCase(pollId, optionId)
+            savedStateHandle["isChangingVote"] = false
+        }
     }
     fun suggestOption(text: String) {
-        viewModelScope.launch { suggestionStatus.value = suggestOptionUseCase(pollId, text) }
+        actions.run { suggestionStatus.value = suggestOptionUseCase(pollId, text) }
     }
     fun clearSuggestionStatus() { suggestionStatus.value = null }
     fun moderate(optionId: String, approve: Boolean) {
-        viewModelScope.launch { moderateOptionUseCase(pollId, optionId, approve) }
+        actions.run { moderateOptionUseCase(pollId, optionId, approve) }
     }
-    fun close() { viewModelScope.launch { closePollUseCase(pollId) } }
+    fun close() { actions.run { closePollUseCase(pollId) } }
 }

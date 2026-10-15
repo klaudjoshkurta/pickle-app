@@ -1,5 +1,6 @@
 package com.shkurta.pickle.ui.auth
 
+import com.shkurta.pickle.domain.model.enumOrDefault
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -21,7 +22,7 @@ class AuthViewModel @Inject constructor(
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(AuthUiState(
         isSignUp = savedStateHandle["isSignUp"] ?: savedStateHandle["signUp"] ?: false,
-        step = SignUpStep.valueOf(savedStateHandle["step"] ?: SignUpStep.Name.name),
+        step = enumOrDefault(savedStateHandle["step"], SignUpStep.Name),
         name = savedStateHandle["name"] ?: "",
         avatarSeeds = savedStateHandle.get<ArrayList<String>>("avatarSeeds")?.toList() ?: DiceBear.randomSeeds(),
         selectedSeed = savedStateHandle["selectedSeed"],
@@ -29,6 +30,7 @@ class AuthViewModel @Inject constructor(
     ))
     val uiState = _uiState.asStateFlow()
     val isAuthenticated = observeAuthentication()
+    val session = observeAuthentication.session
 
     fun initialize(initialSignUp: Boolean) {
         if (savedStateHandle.get<Boolean>("initialized") == true) return
@@ -64,6 +66,7 @@ class AuthViewModel @Inject constructor(
     }
 
     fun submit() {
+        if (uiState.value.isLoading) return
         val state = uiState.value
         if (state.isSignUp) {
             val seed = state.selectedSeed ?: return
@@ -77,18 +80,18 @@ class AuthViewModel @Inject constructor(
     private fun signIn(email: String, password: String) {
         update(uiState.value.copy(status = AuthStatus.Loading))
         viewModelScope.launch {
-            signInUseCase(email, password)
+            com.shkurta.pickle.domain.model.cancellationSafeResult { signInUseCase(email, password).getOrThrow() }
                 .onSuccess { update(uiState.value.copy(status = AuthStatus.Success)) }
-                .onFailure { update(uiState.value.copy(status = AuthStatus.Error(it.message ?: "Sign in failed"))) }
+                .onFailure { update(uiState.value.copy(status = AuthStatus.Error("Sign in failed. Check your connection and credentials."))) }
         }
     }
 
     private fun signUp(email: String, password: String, displayName: String, avatarUrl: String) {
         update(uiState.value.copy(status = AuthStatus.Loading))
         viewModelScope.launch {
-            signUpUseCase(email, password, displayName, avatarUrl)
+            com.shkurta.pickle.domain.model.cancellationSafeResult { signUpUseCase(email, password, displayName, avatarUrl).getOrThrow() }
                 .onSuccess { update(uiState.value.copy(status = AuthStatus.Success)) }
-                .onFailure { update(uiState.value.copy(status = AuthStatus.Error(it.message ?: "Sign up failed"))) }
+                .onFailure { update(uiState.value.copy(status = AuthStatus.Error("Sign up failed. Check your connection and account details."))) }
         }
     }
 

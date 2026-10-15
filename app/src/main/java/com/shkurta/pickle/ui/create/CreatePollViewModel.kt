@@ -1,5 +1,7 @@
 package com.shkurta.pickle.ui.create
 
+import com.shkurta.pickle.domain.model.enumOrDefault
+import com.shkurta.pickle.ui.components.ActionRunner
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -13,7 +15,6 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import javax.inject.Inject
@@ -43,7 +44,11 @@ data class CreatePollUiState(
 class CreatePollViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val createPollUseCase: CreatePollUseCase,
+    private val refreshPolls: com.shkurta.pickle.domain.usecases.poll.RefreshPollsUseCase,
+    private val refreshNotifications: com.shkurta.pickle.domain.usecases.notification.RefreshNotificationsUseCase,
 ) : ViewModel() {
+    private val actions = ActionRunner(viewModelScope)
+    val actionState = actions.state
     private val defaults = PollSettings()
     private val _uiState = MutableStateFlow(CreatePollUiState(
         question = savedStateHandle["question"] ?: "",
@@ -55,14 +60,25 @@ class CreatePollViewModel @Inject constructor(
             showResultsBeforeVoting = savedStateHandle["showResultsBeforeVoting"] ?: defaults.showResultsBeforeVoting,
             allowVoteChange = savedStateHandle["allowVoteChange"] ?: defaults.allowVoteChange,
         ),
-        deadline = Deadline.valueOf(savedStateHandle["deadline"] ?: Deadline.NONE.name),
+        deadline = enumOrDefault(savedStateHandle["deadline"], Deadline.NONE),
         expectedVoters = savedStateHandle["expectedVoters"] ?: "",
     ))
     val uiState = _uiState.asStateFlow()
     private val created = Channel<String>(Channel.BUFFERED)
     val createdPollId = created.receiveAsFlow()
+    private var delivered = false
+
+    private suspend fun deliver(id: String) {
+        if (delivered) return
+        delivered = true
+        created.send(id)
+    }
+
+    init { if (savedStateHandle.get<String>("savedPollId") != null) retry() }
 
     private fun update(state: CreatePollUiState) {
+        if (actionState.value.busy || savedStateHandle.get<String>("savedPollId") != null) return
+        if (state != uiState.value) savedStateHandle.remove<String>("requestId")
         savedStateHandle["question"] = state.question
         savedStateHandle["options"] = ArrayList(state.options)
         savedStateHandle["allowSuggestions"] = state.settings.allowSuggestions
@@ -91,18 +107,39 @@ class CreatePollViewModel @Inject constructor(
     fun setExpectedVoters(value: String) =
         update(uiState.value.copy(expectedVoters = value.filter(Char::isDigit).take(4)))
 
+    fun retry() {
+        if (delivered) return
+        val id = savedStateHandle.get<String>("savedPollId")
+        if (id == null) createPoll() else actions.run {
+            refreshPolls()
+            refreshNotifications()
+            deliver(id)
+        }
+    }
+
     fun createPoll() {
+        if (delivered) return
+        if (savedStateHandle.get<String>("savedPollId") != null) { retry(); return }
+        if (actionState.value.busy) return
         val state = uiState.value
         if (!state.isValid) return
-        viewModelScope.launch {
-            val poll = createPollUseCase(
+        val requestId = savedStateHandle.get<String>("requestId") ?: java.util.UUID.randomUUID().toString().also { savedStateHandle["requestId"] = it }
+        actions.run {
+            val poll = try { createPollUseCase(
                 question = state.question,
                 optionTexts = state.options,
                 settings = state.settings,
                 closesAt = state.deadline.hours?.let { Instant.now().plus(it, ChronoUnit.HOURS) },
                 expectedVoters = state.expectedVoters.toIntOrNull(),
-            )
-            if (poll != null) created.send(poll.id)
+                requestId = requestId,
+            ) } catch (e: com.shkurta.pickle.domain.model.SavedRefreshException) {
+                savedStateHandle["savedPollId"] = e.savedId
+                throw e
+            }
+            if (poll != null) {
+                savedStateHandle["savedPollId"] = poll.id
+                deliver(poll.id)
+            }
         }
     }
 }

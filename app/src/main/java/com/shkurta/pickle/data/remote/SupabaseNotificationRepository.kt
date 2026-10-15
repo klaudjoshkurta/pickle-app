@@ -1,16 +1,14 @@
 package com.shkurta.pickle.data.remote
 
-import com.shkurta.pickle.domain.repository.NotificationRepository
-import com.shkurta.pickle.domain.repository.AuthRepository
-import com.shkurta.pickle.data.remote.dto.CreateNotificationDto
-import com.shkurta.pickle.data.remote.dto.NotificationDto
-import com.shkurta.pickle.domain.model.NotificationType
-import com.shkurta.pickle.domain.model.Poll
-import com.shkurta.pickle.domain.model.PollNotification
+import com.shkurta.pickle.data.auth.AccountCache
+import com.shkurta.pickle.data.auth.SessionGuard
+import com.shkurta.pickle.data.remote.dto.*
+import com.shkurta.pickle.data.sample.SampleNotifications
+import com.shkurta.pickle.domain.model.*
+import com.shkurta.pickle.domain.repository.*
 import io.github.jan.supabase.postgrest.Postgrest
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import io.github.jan.supabase.postgrest.query.Order
+import kotlinx.coroutines.CancellationException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -18,55 +16,53 @@ import javax.inject.Singleton
 class SupabaseNotificationRepository @Inject constructor(
     private val postgrest: Postgrest,
     private val authRepository: AuthRepository,
+    private val guard: SessionGuard,
 ) : NotificationRepository {
-
-    private val _notifications = MutableStateFlow<List<PollNotification>>(emptyList())
-    override val notifications: StateFlow<List<PollNotification>> = _notifications.asStateFlow()
+    private val cache = AccountCache(authRepository, emptyList<PollNotification>(), SampleNotifications.all)
+    override val notifications = cache.state
 
     override suspend fun refresh() {
-        val userId = authRepository.currentUserId ?: return
-        val result = postgrest.from("notifications")
-            .select {
-                filter { eq("user_id", userId) }
-                order("created_at", io.github.jan.supabase.postgrest.query.Order.DESCENDING)
-            }
-            .decodeList<NotificationDto>()
-
-        _notifications.value = result.map { it.toDomain() }
+        if (guard.ready().userId == null) return
+        guard.authenticated { user ->
+            val session = authRepository.session.value
+            val result = postgrest.from("notifications").select {
+                filter { eq("user_id", user) }
+                order("created_at", Order.DESCENDING)
+            }.decodeList<NotificationDto>()
+            val mapped = try { result.map { it.toDomain() } }
+                catch (e: RuntimeException) { throw InvalidRemoteDataException() }
+            cache.publish(session, mapped)
+        }
     }
 
-    override suspend fun add(type: NotificationType, poll: Poll, detail: String?) {
-        val userId = authRepository.currentUserId ?: return
-        val dto = CreateNotificationDto(
-            userId = userId,
-            type = type.name,
-            pollId = poll.id,
-            pollQuestion = poll.question,
-            detail = detail,
-        )
-        postgrest.from("notifications").insert(dto)
-        refresh()
+    override suspend fun add(type: NotificationType, poll: Poll, detail: String?) = guard.authenticated { user ->
+        postgrest.from("notifications").insert(CreateNotificationDto(user, type.name, poll.id, poll.question, detail))
+        refreshAfterWrite()
     }
 
     override suspend fun markRead(id: String) {
-        postgrest.from("notifications").update({
-            set("is_read", true)
-        }) {
-            filter { eq("id", id) }
+        if (guard.ready().userId == null) return // Sample notifications are read-only.
+        guard.authenticated { user ->
+            postgrest.from("notifications").update({ set("is_read", true) }) {
+                filter { eq("id", id); eq("user_id", user) }
+            }
+            refreshAfterWrite()
         }
-        refresh()
     }
 
     override suspend fun markAllRead() {
-        val userId = authRepository.currentUserId ?: return
-        postgrest.from("notifications").update({
-            set("is_read", true)
-        }) {
-            filter {
-                eq("user_id", userId)
-                eq("is_read", false)
+        if (guard.ready().userId == null) return
+        guard.authenticated { user ->
+            postgrest.from("notifications").update({ set("is_read", true) }) {
+                filter { eq("user_id", user); eq("is_read", false) }
             }
+            refreshAfterWrite()
         }
-        refresh()
+    }
+
+    private suspend fun refreshAfterWrite() {
+        try { refresh() }
+        catch (e: CancellationException) { throw e }
+        catch (e: Exception) { throw SavedRefreshException() }
     }
 }

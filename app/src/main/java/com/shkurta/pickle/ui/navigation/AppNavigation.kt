@@ -1,6 +1,10 @@
 package com.shkurta.pickle.ui.navigation
 
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.getValue
@@ -25,15 +29,27 @@ fun AppNavigation(
     navController: NavHostController = rememberNavController(),
     authViewModel: AuthViewModel = hiltViewModel(),
 ) {
-    val isAuthenticated by authViewModel.isAuthenticated.collectAsStateWithLifecycle()
-
-    // When auth state changes to authenticated, navigate to Home
-    LaunchedEffect(isAuthenticated) {
-        if (isAuthenticated) {
-            navController.navigate(Screen.Home) {
-                popUpTo(0) { inclusive = true }
-            }
+    val session by authViewModel.session.collectAsStateWithLifecycle()
+    var previousUserId by rememberSaveable { mutableStateOf<String?>(null) }
+    if (!session.initialized) {
+        androidx.compose.foundation.layout.Box(
+            modifier = androidx.compose.ui.Modifier.fillMaxSize(),
+            contentAlignment = androidx.compose.ui.Alignment.Center,
+        ) { androidx.compose.material3.CircularProgressIndicator() }
+        return
+    }
+    val openCreate: () -> Unit = {
+        navController.navigate(if (session.userId == null) Screen.Auth() else Screen.CreatePoll)
+    }
+    LaunchedEffect(session) {
+        val destination = navController.currentDestination
+        val atEntry = destination?.hasRoute<Screen.Onboarding>() == true || destination?.hasRoute<Screen.Auth>() == true
+        when (authRedirect(previousUserId, session.userId, atEntry)) {
+            AuthRedirect.HOME -> navController.navigate(Screen.Home) { popUpTo(0) { inclusive = true } }
+            AuthRedirect.ONBOARDING -> navController.navigate(Screen.Onboarding) { popUpTo(0) { inclusive = true } }
+            AuthRedirect.NONE -> Unit
         }
+        previousUserId = session.userId
     }
 
     NavHost(
@@ -79,7 +95,7 @@ fun AppNavigation(
         ) {
             HomeScreen(
                 onPollClick = { pollId -> navController.navigate(Screen.Poll(pollId)) },
-                onCreateClick = { navController.navigate(Screen.CreatePoll) },
+                onCreateClick = openCreate,
                 onNotificationsClick = { navController.navigate(Screen.Notifications) },
                 onMenuClick = { navController.navigate(Screen.Menu) }
             )
@@ -100,6 +116,8 @@ fun AppNavigation(
         }
         composable<Screen.Poll> {
             PollScreen(
+                isDemo = session.userId == null,
+                onSignIn = { navController.navigate(Screen.Auth()) },
                 onBack = { navController.popBackStack() }
             )
         }
@@ -112,7 +130,7 @@ fun AppNavigation(
         composable<Screen.Menu> {
             MenuScreen(
                 onBack = { navController.popBackStack() },
-                onCreatePollClick = { navController.navigate(Screen.CreatePoll) },
+                onCreatePollClick = openCreate,
                 onNotificationsClick = { navController.navigate(Screen.Notifications) },
                 onSignedOut = {
                     navController.navigate(Screen.Onboarding) {

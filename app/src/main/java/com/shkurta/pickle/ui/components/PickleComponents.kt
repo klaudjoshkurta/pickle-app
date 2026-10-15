@@ -88,7 +88,7 @@ fun PickleButton(
 
     Button(
         onClick = onClick,
-        enabled = enabled && !loading,
+        enabled = enabled && !loading && LocalActionsEnabled.current,
         modifier = modifier.heightIn(min = height),
         shape = CircleShape,
         border = border,
@@ -162,10 +162,11 @@ fun DashedActionButton(
     enabled: Boolean = true,
 ) {
     val c = Pickle.colors
-    val color = if (enabled) c.teal else c.inkMuted
+    val actionsEnabled = enabled && LocalActionsEnabled.current
+    val color = if (actionsEnabled) c.teal else c.inkMuted
     Surface(
         onClick = onClick,
-        enabled = enabled,
+        enabled = actionsEnabled,
         modifier = modifier
             .fillMaxWidth()
             .dashedBorder(color, PickleCardShapeRadius),
@@ -223,6 +224,7 @@ fun PickleCard(
     if (onClick != null) {
         Surface(
             onClick = onClick,
+            enabled = LocalActionsEnabled.current,
             modifier = modifier.fillMaxWidth(),
             color = color,
             contentColor = Pickle.colors.ink,

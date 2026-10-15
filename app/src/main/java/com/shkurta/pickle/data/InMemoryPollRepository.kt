@@ -43,6 +43,7 @@ class InMemoryPollRepository @Inject constructor(
         closesAt: Instant?,
         expectedVoters: Int?,
         creatorId: String,
+        requestId: String,
     ): Poll? {
         val trimmedQuestion = question.trim()
         val texts = distinctOptionTexts(optionTexts)

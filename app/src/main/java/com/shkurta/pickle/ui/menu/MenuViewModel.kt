@@ -1,5 +1,6 @@
 package com.shkurta.pickle.ui.menu
 
+import com.shkurta.pickle.ui.components.ActionRunner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shkurta.pickle.domain.usecases.auth.GetCurrentUserUseCase
@@ -11,7 +12,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class MenuUiState(
@@ -31,7 +31,9 @@ class MenuViewModel @Inject constructor(
     getCurrentUser: GetCurrentUserUseCase,
     private val signOutUseCase: SignOutUseCase,
 ) : ViewModel() {
-    val uiState = combine(observePolls(), observeNotifications(), observeAuthentication()) { polls, notifications, _ ->
+    private val actions = ActionRunner(viewModelScope)
+    val actionState = actions.state
+    val uiState = combine(observePolls(), observeNotifications(), observeAuthentication.session) { polls, notifications, _ ->
         val user = getCurrentUser()
         val myPolls = polls.filter { it.isCreator(user.userId ?: "") }
         MenuUiState(
@@ -47,5 +49,8 @@ class MenuViewModel @Inject constructor(
         avatarUrl = getCurrentUser().avatarUrl,
     ))
 
-    fun signOut() { viewModelScope.launch { signOutUseCase() } }
+    private val _signedOut = kotlinx.coroutines.flow.MutableStateFlow(false)
+    val signedOut: kotlinx.coroutines.flow.StateFlow<Boolean> = _signedOut
+    fun retry() = actions.retry(::signOut)
+    fun signOut() { actions.run { signOutUseCase(); _signedOut.value = true } }
 }

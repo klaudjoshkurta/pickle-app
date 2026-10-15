@@ -1,5 +1,6 @@
 package com.shkurta.pickle.ui.notifications
 
+import com.shkurta.pickle.ui.components.ActionRunner
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.shkurta.pickle.domain.model.PollNotification
@@ -10,7 +11,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class NotificationsUiState(val notifications: List<PollNotification> = emptyList()) {
@@ -22,11 +22,18 @@ class NotificationsViewModel @Inject constructor(
     observeNotifications: ObserveNotificationsUseCase,
     private val markNotificationRead: MarkNotificationReadUseCase,
     private val markAllNotificationsRead: MarkAllNotificationsReadUseCase,
+    private val refreshNotifications: com.shkurta.pickle.domain.usecases.notification.RefreshNotificationsUseCase,
 ) : ViewModel() {
+    private val actions = ActionRunner(viewModelScope)
+    val actionState = actions.state
     val uiState = observeNotifications().map { NotificationsUiState(it) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000),
             NotificationsUiState(observeNotifications().value))
 
-    fun markRead(id: String) { viewModelScope.launch { markNotificationRead(id) } }
-    fun markAllRead() { viewModelScope.launch { markAllNotificationsRead() } }
+    fun refresh() = actions.run { refreshNotifications() }
+    fun retry() = actions.retry(::refresh)
+    init { refresh() }
+
+    fun markRead(id: String) { actions.run { markNotificationRead(id) } }
+    fun markAllRead() { actions.run { markAllNotificationsRead() } }
 }

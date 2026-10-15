@@ -1,5 +1,6 @@
 package com.shkurta.pickle.ui.notifications
 
+import com.shkurta.pickle.ui.components.ActionFrame
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -61,15 +62,18 @@ fun NotificationsScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
 
-    NotificationsContent(
-        state = state,
-        onBack = onBack,
-        onMarkAllRead = { viewModel.markAllRead() },
-        onNotificationClick = { notification ->
-            viewModel.markRead(notification.id)
-            onPollClick(notification.pollId)
-        },
-    )
+    val action by viewModel.actionState.collectAsStateWithLifecycle()
+    ActionFrame(action, viewModel::retry) {
+        NotificationsContent(
+            state = state,
+            onBack = onBack,
+            onMarkAllRead = { viewModel.markAllRead() },
+            onNotificationClick = { notification ->
+                viewModel.markRead(notification.id)
+                onPollClick(notification.pollId)
+            },
+        )
+    }
 }
 
 @Composable
@@ -153,7 +157,7 @@ private fun NotificationsTopBar(
         },
         actions = {
             if (hasUnread) {
-                TextButton(onClick = onMarkAllRead) {
+                TextButton(onClick = onMarkAllRead, enabled = com.shkurta.pickle.ui.components.LocalActionsEnabled.current) {
                     Text(
                         text = "Mark all read",
                         style = MaterialTheme.typography.labelLarge,
