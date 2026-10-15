@@ -31,8 +31,8 @@ class InMemoryPollRepository @Inject constructor(
     private val _polls = MutableStateFlow(SamplePolls.all)
     override val polls: StateFlow<List<Poll>> = _polls.asStateFlow()
 
-    private val _myVotes = MutableStateFlow<Map<String, String>>(emptyMap())
-    override val myVotes: StateFlow<Map<String, String>> = _myVotes.asStateFlow()
+    private val _myVotes = MutableStateFlow<Map<String, Set<String>>>(emptyMap())
+    override val myVotes: StateFlow<Map<String, Set<String>>> = _myVotes.asStateFlow()
 
     override suspend fun refresh() { /* no-op for in-memory */ }
 
@@ -44,6 +44,7 @@ class InMemoryPollRepository @Inject constructor(
         expectedVoters: Int?,
         creatorId: String,
         requestId: String,
+        templateId: String?,
     ): Poll? {
         val trimmedQuestion = question.trim()
         val texts = distinctOptionTexts(optionTexts)
@@ -66,6 +67,7 @@ class InMemoryPollRepository @Inject constructor(
             status = PollStatus.OPEN,
             createdAt = now,
             closedAt = closesAt,
+            templateId = templateId,
             expectedVoters = expectedVoters?.takeIf { it > 0 },
         )
         _polls.update { listOf(poll) + it }
@@ -73,26 +75,18 @@ class InMemoryPollRepository @Inject constructor(
         return poll
     }
 
-    override suspend fun vote(pollId: String, optionId: String) {
+    override suspend fun vote(pollId: String, optionIds: Set<String>) {
         val poll = openPoll(pollId) ?: return
-        if (poll.approvedOptions.none { it.id == optionId }) return
-
-        val previous = _myVotes.value[pollId]
-        if (previous == optionId) return
-        if (previous != null && !poll.settings.allowVoteChange) return
-
+        if (optionIds.isEmpty() || optionIds.any { id -> poll.approvedOptions.none { it.id == id } }) return
+        if (poll.settings.votingMode == com.shkurta.pickle.domain.model.VotingMode.SINGLE && optionIds.size != 1) return
+        val previous = _myVotes.value[pollId].orEmpty()
+        if (previous == optionIds || (previous.isNotEmpty() && !poll.settings.allowVoteChange)) return
         updatePoll(pollId) {
-            it.copy(
-                options = it.options.map { option ->
-                    when (option.id) {
-                        optionId -> option.copy(voteCount = option.voteCount + 1)
-                        previous -> option.copy(voteCount = (option.voteCount - 1).coerceAtLeast(0))
-                        else -> option
-                    }
-                },
-            )
+            it.copy(options = it.options.map { option ->
+                option.copy(voteCount = option.voteCount + (if (option.id in optionIds) 1 else 0) - (if (option.id in previous) 1 else 0))
+            }, voterCount = it.totalVotes + if (previous.isEmpty()) 1 else 0)
         }
-        _myVotes.update { it + (pollId to optionId) }
+        _myVotes.update { it + (pollId to optionIds) }
     }
 
     override suspend fun suggestOption(pollId: String, text: String, userId: String): OptionStatus? {

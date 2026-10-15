@@ -34,12 +34,12 @@ class MvvmViewModelTest {
         AuthViewModel(handle, SignInUseCase(auth), SignUpUseCase(auth), ObserveAuthenticationUseCase(auth))
 
     private fun createViewModel(handle: SavedStateHandle = SavedStateHandle()) =
-        CreatePollViewModel(handle, CreatePollUseCase(polls, auth), RefreshPollsUseCase(polls), RefreshNotificationsUseCase(notifications))
+        CreatePollViewModel(handle, CreatePollUseCase(polls, auth), RefreshPollsUseCase(polls), RefreshNotificationsUseCase(notifications), FakeTemplateRepository(), polls)
 
     private fun pollViewModel(handle: SavedStateHandle = SavedStateHandle(mapOf("pollId" to "poll"))) =
         PollViewModel(handle, ObservePollUseCase(polls), ObserveMyVotesUseCase(polls),
             ObserveAuthenticationUseCase(auth), GetCurrentUserUseCase(auth), VoteUseCase(polls),
-            SuggestOptionUseCase(polls, auth), ModerateOptionUseCase(polls), ClosePollUseCase(polls), RefreshPollsUseCase(polls))
+            SuggestOptionUseCase(polls, auth), ModerateOptionUseCase(polls), ClosePollUseCase(polls), FakeTemplateRepository(), RefreshPollsUseCase(polls))
 
     private fun <T> TestScope.subscribe(state: StateFlow<T>) {
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { state.collect() }
@@ -48,7 +48,7 @@ class MvvmViewModelTest {
     private fun restored(handle: SavedStateHandle) =
         SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) })
 
-    @Test fun homeFiltersAllOpenPollsAndRefreshesWithoutCreatorFiltering() = runTest {
+    @Test fun homeFiltersOwnedPollsAndRefreshes() = runTest {
         polls.polls.value = listOf(testPoll(), testPoll("guest", "other"), testPoll("closed", status = PollStatus.CLOSED))
         val handle = SavedStateHandle()
         val vm = HomeViewModel(handle, ObservePollsUseCase(polls), ObserveNotificationsUseCase(notifications),
@@ -56,7 +56,7 @@ class MvvmViewModelTest {
             RefreshPollsUseCase(polls), RefreshNotificationsUseCase(notifications))
         subscribe(vm.uiState)
         runCurrent()
-        assertEquals(listOf("poll", "guest"), vm.uiState.value.polls.map { it.id })
+        assertEquals(listOf("poll"), vm.uiState.value.polls.map { it.id })
         assertTrue(vm.uiState.value.hasUnreadNotifications)
         assertEquals(1, polls.refreshCalls)
         assertEquals(1, notifications.refreshCalls)

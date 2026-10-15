@@ -60,7 +60,7 @@ class FakeAuthRepository : AuthRepository {
 
 class FakePollRepository : PollRepository {
     override val polls = MutableStateFlow(listOf(testPoll()))
-    override val myVotes = MutableStateFlow<Map<String, String>>(emptyMap())
+    override val myVotes = MutableStateFlow<Map<String, Set<String>>>(emptyMap())
     var failure: Exception? = null
     var refreshFailure: Exception? = null
     var gate: kotlinx.coroutines.CompletableDeferred<Unit>? = null
@@ -79,6 +79,7 @@ class FakePollRepository : PollRepository {
         question: String, optionTexts: List<String>, settings: PollSettings,
         closesAt: Instant?, expectedVoters: Int?, creatorId: String,
         requestId: String,
+        templateId: String?,
     ): Poll {
         createCalls++
         requestIds += requestId
@@ -89,9 +90,9 @@ class FakePollRepository : PollRepository {
         return testPoll("created", creatorId).copy(question = question, settings = settings)
     }
     override suspend fun refresh() { refreshCalls++; refreshFailure?.let { throw it } }
-    override suspend fun vote(pollId: String, optionId: String) {
+    override suspend fun vote(pollId: String, optionIds: Set<String>) {
         before()
-        myVotes.value = myVotes.value + (pollId to optionId)
+        myVotes.value = myVotes.value + (pollId to optionIds)
     }
     override suspend fun suggestOption(pollId: String, text: String, userId: String): OptionStatus {
         before()
@@ -122,5 +123,17 @@ class FakeNotificationRepository : NotificationRepository {
     override suspend fun markAllRead() {
         failure?.let { throw it }
         notifications.value = notifications.value.map { it.copy(isRead = true) }
+    }
+}
+
+class FakeTemplateRepository : com.shkurta.pickle.domain.repository.TemplateRepository {
+    override val templates=MutableStateFlow<List<PollTemplate>>(emptyList())
+    var failure: Exception?=null
+    var gate:kotlinx.coroutines.CompletableDeferred<Unit>?=null
+    var refreshCalls=0
+    var saveCalls=0
+    override suspend fun refresh() { refreshCalls++;gate?.await();failure?.let {throw it} }
+    override suspend fun save(pollId:String,name:String,icon:String,schedule:WeeklySchedule?):String {
+        saveCalls++;gate?.await();failure?.let {throw it};return "template"
     }
 }

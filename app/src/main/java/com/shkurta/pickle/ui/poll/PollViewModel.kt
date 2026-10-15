@@ -31,16 +31,18 @@ import javax.inject.Inject
 data class PollUiState(
     val isDemo: Boolean = false,
     val poll: Poll? = null,
-    val myVoteOptionId: String? = null,
+    val myVoteOptionIds: Set<String> = emptySet(),
     val lastSuggestionStatus: OptionStatus? = null,
-    val selectedOptionId: String? = null,
+    val selectedOptionIds: Set<String> = emptySet(),
     val isChangingVote: Boolean = false,
     val isOpen: Boolean = false,
     val isCreator: Boolean = false,
     val results: PollResults? = null,
     val pendingSuggestions: List<PollOption> = emptyList(),
 ) {
-    val hasVoted: Boolean get() = myVoteOptionId != null
+    val myVoteOptionId: String? get() = myVoteOptionIds.firstOrNull()
+    val selectedOptionId: String? get() = selectedOptionIds.firstOrNull()
+    val hasVoted: Boolean get() = myVoteOptionIds.isNotEmpty()
     val showResults: Boolean get() = poll != null && (isDemo || hasVoted || poll.settings.showResultsBeforeVoting || !isOpen)
     val canVote: Boolean get() = !isDemo && isOpen && (!hasVoted || poll?.settings?.allowVoteChange == true)
     val isVoting: Boolean get() = canVote && (!hasVoted || isChangingVote)
@@ -56,13 +58,16 @@ data class PollUiState(
             isChangingVote: Boolean = false,
             lastSuggestionStatus: OptionStatus? = null,
         ): PollUiState {
+            return fromBallot(poll,userId,setOfNotNull(myVoteOptionId),setOfNotNull(selectedOptionId),isChangingVote,lastSuggestionStatus)
+        }
+        fun fromBallot(poll: Poll?, userId: String, myVoteOptionIds: Set<String>, selectedOptionIds: Set<String> = myVoteOptionIds, isChangingVote: Boolean = false, lastSuggestionStatus: OptionStatus? = null): PollUiState {
             val isOpen = poll?.isOpen() == true
             val isCreator = poll?.isCreator(userId) == true
             return PollUiState(
                 poll = poll,
-                myVoteOptionId = myVoteOptionId,
+                myVoteOptionIds = myVoteOptionIds,
                 lastSuggestionStatus = lastSuggestionStatus,
-                selectedOptionId = selectedOptionId,
+                selectedOptionIds = selectedOptionIds,
                 isChangingVote = isChangingVote,
                 isOpen = isOpen,
                 isCreator = isCreator,
@@ -74,7 +79,7 @@ data class PollUiState(
 }
 
 private data class PollInteraction(
-    val selectedOptionId: String?,
+    val selectedOptionIds: Set<String>,
     val isChangingVote: Boolean,
     val lastSuggestionStatus: OptionStatus?,
 )
@@ -90,6 +95,7 @@ class PollViewModel @Inject constructor(
     private val suggestOptionUseCase: SuggestOptionUseCase,
     private val moderateOptionUseCase: ModerateOptionUseCase,
     private val closePollUseCase: ClosePollUseCase,
+    private val templates: com.shkurta.pickle.domain.repository.TemplateRepository,
     private val refreshPolls: com.shkurta.pickle.domain.usecases.poll.RefreshPollsUseCase,
 ) : ViewModel() {
     private val actions = ActionRunner(viewModelScope)
@@ -99,43 +105,65 @@ class PollViewModel @Inject constructor(
     }
     private val votes = observeMyVotes()
     private var previousVote = votes.value[pollId]
-    private val selectedOption = savedStateHandle.getStateFlow<String?>("selectedOptionId", previousVote)
+    private val selectedOption = savedStateHandle.getStateFlow("selectedOptionIds", ArrayList<String>(previousVote.orEmpty().toList()))
     private val changingVote = savedStateHandle.getStateFlow("isChangingVote", false)
     private val suggestionStatus = MutableStateFlow<OptionStatus?>(null)
-    private val interaction = combine(selectedOption, changingVote, suggestionStatus, ::PollInteraction)
+    private val interaction = combine(selectedOption, changingVote, suggestionStatus) { selected, changing, status -> PollInteraction(selected.toSet(),changing,status) }
 
     val uiState = combine(observePoll(pollId), votes, observeAuthentication.session, interaction) {
             poll, myVotes, _, actions ->
-        PollUiState.from(
-            poll, getCurrentUser().userId ?: "", myVotes[pollId],
-            actions.selectedOptionId, actions.isChangingVote, actions.lastSuggestionStatus,
+        PollUiState.fromBallot(
+            poll, getCurrentUser().userId ?: "", myVotes[pollId].orEmpty(),
+            actions.selectedOptionIds, actions.isChangingVote, actions.lastSuggestionStatus,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), PollUiState())
 
-    fun refresh() = actions.run { refreshPolls() }
+    val savedTemplateId = MutableStateFlow<String?>(null)
+    val personalTemplates = templates.templates
+    fun clearSavedTemplate() { savedTemplateId.value=null }
+    fun saveTemplate(name:String, icon:String, schedule:com.shkurta.pickle.domain.model.WeeklySchedule?) = actions.run {
+        try { savedTemplateId.value=templates.save(pollId,name,icon,schedule) }
+        catch(e:com.shkurta.pickle.domain.model.SavedRefreshException) { savedTemplateId.value=e.savedId; throw e }
+    }
+    fun refresh() = actions.run { refreshPolls(); templates.refresh() }
     fun retry() = actions.retry(::refresh)
 
     init {
-        refresh()
+        var previousUser = getCurrentUser().userId
+        observeAuthentication.session.map { it.userId }.distinctUntilChanged().onEach {
+            actions.cancel(); savedTemplateId.value=null; suggestionStatus.value=null
+            if(it != previousUser) {
+                previousUser=it
+                savedStateHandle["selectedOptionIds"]=arrayListOf<String>(); savedStateHandle["isChangingVote"]=false
+            }
+            refresh()
+        }.launchIn(viewModelScope)
         votes.map { it[pollId] }.distinctUntilChanged().onEach { vote ->
             if (vote != previousVote) {
                 previousVote = vote
-                savedStateHandle["selectedOptionId"] = vote
+                savedStateHandle["selectedOptionIds"] = ArrayList<String>(vote.orEmpty().toList())
                 savedStateHandle["isChangingVote"] = false
             }
         }.launchIn(viewModelScope)
     }
 
-    fun selectOption(optionId: String) { savedStateHandle["selectedOptionId"] = optionId }
+    fun selectOption(optionId: String) {
+        if(actionState.value.busy) return
+        val selected=selectedOption.value.toSet()
+        savedStateHandle["selectedOptionIds"] = ArrayList(if(uiState.value.poll?.settings?.votingMode == com.shkurta.pickle.domain.model.VotingMode.MULTIPLE) {
+            if(optionId in selected) selected-optionId else selected+optionId
+        } else setOf(optionId))
+    }
     fun changeVote() { savedStateHandle["isChangingVote"] = true }
     fun keepVote() {
-        savedStateHandle["selectedOptionId"] = votes.value[pollId]
+        savedStateHandle["selectedOptionIds"] = ArrayList<String>(votes.value[pollId].orEmpty().toList())
         savedStateHandle["isChangingVote"] = false
     }
     fun vote() {
-        val optionId = selectedOption.value ?: return
+        val optionIds = selectedOption.value.toSet()
+        if(optionIds.isEmpty()) return
         actions.run {
-            voteUseCase(pollId, optionId)
+            voteUseCase(pollId, optionIds)
             savedStateHandle["isChangingVote"] = false
         }
     }

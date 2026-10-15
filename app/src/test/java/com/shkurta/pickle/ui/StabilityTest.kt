@@ -28,7 +28,7 @@ class StabilityTest {
     private val polls = FakePollRepository()
     private val notifications = FakeNotificationRepository()
     private fun create(handle: SavedStateHandle = SavedStateHandle()) = CreatePollViewModel(
-        handle, CreatePollUseCase(polls, auth), RefreshPollsUseCase(polls), RefreshNotificationsUseCase(notifications),
+        handle, CreatePollUseCase(polls, auth), RefreshPollsUseCase(polls), RefreshNotificationsUseCase(notifications), FakeTemplateRepository(), polls,
     )
     private fun draft(vm: CreatePollViewModel) {
         vm.setQuestion("Dinner?"); vm.setOption(0, "Pizza"); vm.setOption(1, "Pasta")
@@ -36,7 +36,7 @@ class StabilityTest {
     private fun poll() = PollViewModel(
         SavedStateHandle(mapOf("pollId" to "poll")), ObservePollUseCase(polls), ObserveMyVotesUseCase(polls),
         ObserveAuthenticationUseCase(auth), GetCurrentUserUseCase(auth), VoteUseCase(polls),
-        SuggestOptionUseCase(polls, auth), ModerateOptionUseCase(polls), ClosePollUseCase(polls), RefreshPollsUseCase(polls),
+        SuggestOptionUseCase(polls, auth), ModerateOptionUseCase(polls), ClosePollUseCase(polls), FakeTemplateRepository(), RefreshPollsUseCase(polls),
     )
 
     @Test fun homeRefreshFailurePreservesDataAndStillRefreshesNotifications() = runTest {

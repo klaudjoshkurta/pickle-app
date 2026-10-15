@@ -15,6 +15,10 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
+    @Binds
+    @Singleton
+    abstract fun bindTemplateRepository(impl: com.shkurta.pickle.data.remote.SupabaseTemplateRepository): com.shkurta.pickle.domain.repository.TemplateRepository
+
 
     @Binds
     @Singleton

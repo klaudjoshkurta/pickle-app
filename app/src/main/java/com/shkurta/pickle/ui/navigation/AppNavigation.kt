@@ -39,7 +39,7 @@ fun AppNavigation(
         return
     }
     val openCreate: () -> Unit = {
-        navController.navigate(if (session.userId == null) Screen.Auth() else Screen.CreatePoll)
+        navController.navigate(if (session.userId == null) Screen.Auth() else Screen.CreatePoll())
     }
     LaunchedEffect(session) {
         val destination = navController.currentDestination
@@ -97,7 +97,15 @@ fun AppNavigation(
                 onPollClick = { pollId -> navController.navigate(Screen.Poll(pollId)) },
                 onCreateClick = openCreate,
                 onNotificationsClick = { navController.navigate(Screen.Notifications) },
-                onMenuClick = { navController.navigate(Screen.Menu) }
+                onMenuClick = { navController.navigate(Screen.Menu) },
+                onTemplatesClick = { navController.navigate(Screen.Templates) },
+                onStarterClick = { starter -> navController.navigate(if(session.userId==null) Screen.Auth() else Screen.CreatePoll(starterId=starter)) }
+            )
+        }
+        composable<Screen.Templates> {
+            com.shkurta.pickle.ui.templates.TemplatesScreen(
+                onBack={navController.popBackStack()},
+                onUse={starter,template -> navController.navigate(if(session.userId==null) Screen.Auth() else Screen.CreatePoll(starter,template))},
             )
         }
         composable<Screen.CreatePoll>(
@@ -116,6 +124,7 @@ fun AppNavigation(
         }
         composable<Screen.Poll> {
             PollScreen(
+                onTemplateSaved = { navController.navigate(Screen.Templates) },
                 isDemo = session.userId == null,
                 onSignIn = { navController.navigate(Screen.Auth()) },
                 onBack = { navController.popBackStack() }

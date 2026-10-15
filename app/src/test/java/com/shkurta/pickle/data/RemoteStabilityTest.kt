@@ -57,13 +57,13 @@ class RemoteStabilityTest {
             install(Postgrest)
             httpEngine = MockEngine { request ->
                 when {
-                    request.url.encodedPath.endsWith("/rpc/create_poll") -> {
+                    request.url.encodedPath.endsWith("/rpc/create_poll_v2") -> {
                         rpcBodies += Json.parseToJsonElement(request.body.toByteArray().decodeToString()).jsonObject
                         respond("\"poll\"", headers = headers)
                     }
                     request.url.encodedPath.endsWith("/polls") -> if (failRead) respond("{}", HttpStatusCode.ServiceUnavailable, headers)
                         else respond(pollJson, headers = headers)
-                    request.url.encodedPath.endsWith("/votes") -> respond("[]", headers = headers)
+                    request.url.encodedPath.endsWith("/votes") || request.url.encodedPath.endsWith("/poll_ballots") -> respond("[]", headers = headers)
                     else -> error("Unexpected endpoint: ${request.url.encodedPath}")
                 }
             }
@@ -77,7 +77,7 @@ class RemoteStabilityTest {
             assertEquals("poll", poll!!.id)
             assertEquals(2, rpcBodies.size)
             assertEquals(rpcBodies[0]["p_request_id"], rpcBodies[1]["p_request_id"])
-            assertEquals(JsonNull, rpcBodies[0]["p_deadline_seconds"])
+            assertEquals(JsonNull, rpcBodies[0]["p_closes_at"])
             assertEquals(2, rpcBodies[0]["p_options"]!!.jsonArray.size)
         } finally { client.close() }
     }
@@ -87,7 +87,7 @@ class RemoteStabilityTest {
         val client = createSupabaseClient("http://localhost", "test-key") {
             install(Postgrest)
             httpEngine = MockEngine { request ->
-                respond(if (request.url.encodedPath.endsWith("/votes")) "[]"
+                respond(if (request.url.encodedPath.endsWith("/votes") || request.url.encodedPath.endsWith("/poll_ballots")) "[]"
                     else if (bad) pollJson.replace("\"OPEN\"", "\"UNKNOWN\"") else pollJson, headers = headers)
             }
         }

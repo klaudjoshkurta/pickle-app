@@ -26,7 +26,7 @@ class SupabasePollRepository @Inject constructor(
     private val guard: SessionGuard,
 ) : PollRepository {
     private val pollCache = AccountCache(authRepository, emptyList<Poll>(), SamplePolls.all)
-    private val voteCache = AccountCache(authRepository, emptyMap<String, String>())
+    private val voteCache = AccountCache(authRepository, emptyMap<String, Set<String>>())
     override val polls = pollCache.state
     override val myVotes = voteCache.state
     private val refreshMutex = Mutex()
@@ -48,8 +48,9 @@ class SupabasePollRepository @Inject constructor(
             throw InvalidRemoteDataException()
         }
         val votes = postgrest.from("votes").select { filter { eq("voter_id", userId) } }.decodeList<VoteDto>()
+        val ballots = postgrest.from("poll_ballots").select { filter { eq("voter_id", userId) } }.decodeList<BallotDto>()
         pollCache.publish(session, mapped)
-        voteCache.publish(session, votes.associate { it.pollId to it.optionId })
+        voteCache.publish(session, votes.associate { it.pollId to setOf(it.optionId) } + ballots.associate { it.pollId to it.optionIds.toSet() })
     }
 
     private suspend fun fetchPolls() = postgrest.from("polls")
@@ -58,23 +59,20 @@ class SupabasePollRepository @Inject constructor(
 
     override suspend fun createPoll(
         question: String, optionTexts: List<String>, settings: PollSettings,
-        closesAt: Instant?, expectedVoters: Int?, creatorId: String, requestId: String,
+        closesAt: Instant?, expectedVoters: Int?, creatorId: String, requestId: String, templateId: String?,
     ): Poll? = guard.authenticated { userId ->
         if (creatorId != userId) throw SignInRequiredException()
         if (!isValidPollInput(question, optionTexts)) return@authenticated null
-        // The UI offers fixed durations; the server calculates the deadline using its own clock.
-        val seconds = closesAt?.let { deadline ->
-            val remaining = java.time.Duration.between(Instant.now(), deadline).seconds
-            listOf(3600, 86400, 259200, 604800).minBy { kotlin.math.abs(it.toLong() - remaining) }
-        }
-        val id = postgrest.rpc("create_poll", buildJsonObject {
+        val id = postgrest.rpc("create_poll_v2", buildJsonObject {
             put("p_question", question.trim())
             put("p_options", JsonArray(distinctOptionTexts(optionTexts).map(::JsonPrimitive)))
             put("p_allow_suggestions", settings.allowSuggestions)
             put("p_require_approval", settings.requireApproval)
             put("p_show_results_before_voting", settings.showResultsBeforeVoting)
             put("p_allow_vote_change", settings.allowVoteChange)
-            put("p_deadline_seconds", seconds?.let(::JsonPrimitive) ?: JsonNull)
+            put("p_closes_at", closesAt?.toString()?.let(::JsonPrimitive) ?: JsonNull)
+            put("p_voting_mode", settings.votingMode.name)
+            put("p_template_id", templateId?.let(::JsonPrimitive) ?: JsonNull)
             put("p_expected_voters", expectedVoters?.let(::JsonPrimitive) ?: JsonNull)
             put("p_request_id", requestId)
         }).decodeAs<String>()
@@ -85,8 +83,8 @@ class SupabasePollRepository @Inject constructor(
         polls.value.firstOrNull { it.id == id } ?: throw SavedRefreshException(id)
     }
 
-    override suspend fun vote(pollId: String, optionId: String) = guard.authenticated {
-        postgrest.rpc("cast_vote", buildJsonObject { put("p_poll_id", pollId); put("p_option_id", optionId) })
+    override suspend fun vote(pollId: String, optionIds: Set<String>) = guard.authenticated {
+        postgrest.rpc("cast_ballot", buildJsonObject { put("p_poll_id", pollId); put("p_option_ids", JsonArray(optionIds.map(::JsonPrimitive))) })
         followUp { refreshPolls() }
     }
 

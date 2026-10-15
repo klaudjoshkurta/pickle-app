@@ -42,6 +42,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -96,10 +99,18 @@ fun PollScreen(
     onBack: () -> Unit,
     isDemo: Boolean = false,
     onSignIn: () -> Unit = {},
+    onTemplateSaved: () -> Unit = {},
     viewModel: PollViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val poll = state.poll
+    var showTemplateDialog by rememberSaveable { mutableStateOf(false) }
+    val templateId by viewModel.savedTemplateId.collectAsStateWithLifecycle()
+    val templates by viewModel.personalTemplates.collectAsStateWithLifecycle()
+    androidx.compose.runtime.LaunchedEffect(templateId) {
+        if(templateId != null) { showTemplateDialog=false; viewModel.clearSavedTemplate(); onTemplateSaved() }
+    }
+    if(showTemplateDialog && poll != null) SaveTemplateDialog(poll, templates.firstOrNull { it.id==poll.templateId || it.sourcePollId==poll.id },{showTemplateDialog=false},viewModel::saveTemplate)
     val context = LocalContext.current
 
     val action by viewModel.actionState.collectAsStateWithLifecycle()
@@ -128,6 +139,7 @@ fun PollScreen(
                 onClearSuggestionStatus = { viewModel.clearSuggestionStatus() },
                 onModerate = { optionId, approve -> viewModel.moderate(optionId, approve) },
                 onClose = { viewModel.close() },
+                onSaveTemplate = { showTemplateDialog=true },
             )
         }
     }
@@ -147,11 +159,12 @@ private fun PollContent(
     onClearSuggestionStatus: () -> Unit,
     onModerate: (optionId: String, approve: Boolean) -> Unit,
     onClose: () -> Unit,
+    onSaveTemplate: () -> Unit = {},
 ) {
     val c = Pickle.colors
     val poll = state.poll ?: return
     val results = state.results ?: return
-    val myVoteOptionId = state.myVoteOptionId
+    val myVoteOptionIds = state.myVoteOptionIds
     val lastSuggestionStatus = state.lastSuggestionStatus
     val isOpen = state.isOpen
     val isCreator = state.isCreator
@@ -159,7 +172,8 @@ private fun PollContent(
     val showResults = state.showResults
     val isChangingVote = state.isChangingVote
     val isVoting = state.isVoting
-    val selectedOptionId = state.selectedOptionId
+    val selectedOptionIds = state.selectedOptionIds
+    val multiple = poll.settings.votingMode == com.shkurta.pickle.domain.model.VotingMode.MULTIPLE
     var showCloseSheet by rememberSaveable { mutableStateOf(false) }
 
     val showResultsSection = state.showResultsSection
@@ -183,12 +197,13 @@ private fun PollContent(
                 ) {
                     PickleButton(
                         text = when {
-                            selectedOption == null -> "Pick an option"
-                            hasVoted -> "Change to ${selectedOption.text}"
-                            else -> "Vote for ${selectedOption.text}"
+                            selectedOptionIds.isEmpty() -> "Pick an option"
+                            multiple -> "${if(hasVoted) "Update" else "Submit"} ${selectedOptionIds.size} selections"
+                            hasVoted -> "Change to ${selectedOption?.text.orEmpty()}"
+                            else -> "Vote for ${selectedOption?.text.orEmpty()}"
                         },
                         onClick = onVote,
-                        enabled = selectedOptionId != null && selectedOptionId != myVoteOptionId,
+                        enabled = selectedOptionIds.isNotEmpty() && selectedOptionIds != myVoteOptionIds,
                         style = PickleButtonStyle.Teal,
                         modifier = Modifier.fillMaxWidth(),
                     )
@@ -214,7 +229,7 @@ private fun PollContent(
             if (hasVoted && isOpen && !isVoting) {
                 item(key = "youre_in") {
                     YoureInBanner(
-                        optionText = poll.approvedOptions.firstOrNull { it.id == myVoteOptionId }?.text,
+                        optionText = poll.approvedOptions.filter { it.id in myVoteOptionIds }.joinToString { it.text },
                         canChange = poll.settings.allowVoteChange,
                         onChange = onChangeVote,
                     )
@@ -227,7 +242,7 @@ private fun PollContent(
 
             if (isVoting) {
                 item(key = "pick_label") {
-                    PickOneLabel(resultsHidden = !showResults)
+                    PickOneLabel(resultsHidden = !showResults, multiple = multiple)
                 }
                 items(
                     items = poll.approvedOptions,
@@ -235,7 +250,8 @@ private fun PollContent(
                 ) { option ->
                     VoteOptionRow(
                         option = option,
-                        selected = option.id == selectedOptionId,
+                        selected = option.id in selectedOptionIds,
+                        multiple = multiple,
                         onClick = { onSelectOption(option.id) },
                     )
                 }
@@ -260,7 +276,7 @@ private fun PollContent(
                         LeaderCard(
                             results = results,
                             isOpen = isOpen,
-                            myVoteOptionId = myVoteOptionId,
+                            myVoteOptionIds = myVoteOptionIds,
                         )
                     }
                     val rest = results.options.drop(leaderCount(results))
@@ -268,7 +284,7 @@ private fun PollContent(
                         item(key = "rest") {
                             ResultsList(
                                 rows = rest,
-                                myVoteOptionId = myVoteOptionId,
+                                myVoteOptionIds = myVoteOptionIds,
                             )
                         }
                     }
@@ -297,6 +313,9 @@ private fun PollContent(
                 }
             }
 
+            if (isCreator) {
+                item(key="save_template") { PickleButton("Save as template",onSaveTemplate,style=PickleButtonStyle.Outline,modifier=Modifier.fillMaxWidth()) }
+            }
             if (isCreator && isOpen) {
                 item(key = "link") {
                     LinkCard(pollId = poll.id, onShare = onShare)
@@ -447,7 +466,7 @@ private fun YoureInBanner(
 }
 
 @Composable
-private fun PickOneLabel(resultsHidden: Boolean) {
+private fun PickOneLabel(resultsHidden: Boolean, multiple: Boolean = false) {
     val c = Pickle.colors
     Row(
         modifier = Modifier
@@ -456,7 +475,7 @@ private fun PickOneLabel(resultsHidden: Boolean) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = "Pick one",
+            text = if(multiple) "Pick all that work" else "Pick one",
             style = MaterialTheme.typography.labelLarge,
             color = c.ink,
             modifier = Modifier.weight(1f),
@@ -482,13 +501,12 @@ private fun PickOneLabel(resultsHidden: Boolean) {
 private fun VoteOptionRow(
     option: PollOption,
     selected: Boolean,
+    multiple: Boolean = false,
     onClick: () -> Unit,
 ) {
     val c = Pickle.colors
     Surface(
-        selected = selected,
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().then(if(multiple) Modifier.toggleable(value=selected,role=Role.Checkbox,onValueChange={onClick()}) else Modifier.selectable(selected=selected,role=Role.RadioButton,onClick=onClick)),
         color = if (selected) c.tealSoft else c.surface,
         contentColor = c.ink,
         shape = PickleCardShape,
@@ -499,7 +517,7 @@ private fun VoteOptionRow(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            RadioDot(selected = selected)
+            if(multiple) androidx.compose.material3.Checkbox(checked=selected,onCheckedChange=null) else RadioDot(selected = selected)
             Text(
                 text = option.text,
                 style = MaterialTheme.typography.bodyLarge,
@@ -539,7 +557,7 @@ private fun RadioDot(selected: Boolean) {
 private fun LeaderCard(
     results: PollResults,
     isOpen: Boolean,
-    myVoteOptionId: String?,
+    myVoteOptionIds: Set<String>,
 ) {
     val c = Pickle.colors
     val leaders = results.options.take(leaderCount(results))
@@ -577,7 +595,7 @@ private fun LeaderCard(
                     color = c.onBrand,
                     modifier = Modifier.padding(end = 72.dp),
                 )
-                if (leaders.any { it.option.id == myVoteOptionId }) {
+                if (leaders.any { it.option.id in myVoteOptionIds }) {
                     Spacer(Modifier.height(8.dp))
                     InfoPill(
                         text = "Your pick",
@@ -601,7 +619,7 @@ private fun LeaderCard(
                     )
                     InfoPill(
                         text = buildString {
-                            append("${top.option.voteCount} of ${results.totalVotes} votes")
+                            append("${top.option.voteCount} of ${results.totalVotes} ${if(results.votingMode==com.shkurta.pickle.domain.model.VotingMode.MULTIPLE) "voters" else "votes"}")
                             if (!isTie && margin > 0) append(if (isOpen) " · ahead by $margin" else " · won by $margin")
                         },
                         container = c.tomatoDeep,
@@ -654,7 +672,7 @@ private fun Ribbon(text: String, modifier: Modifier = Modifier) {
 @Composable
 private fun ResultsList(
     rows: List<OptionResult>,
-    myVoteOptionId: String?,
+    myVoteOptionIds: Set<String>,
 ) {
     val c = Pickle.colors
     PickleCard(contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp)) {
@@ -670,7 +688,7 @@ private fun ResultsList(
                             maxLines = 2,
                             overflow = TextOverflow.Ellipsis,
                         )
-                        if (row.option.id == myVoteOptionId) {
+                        if (row.option.id in myVoteOptionIds) {
                             Text(
                                 text = "Your pick",
                                 style = MaterialTheme.typography.labelSmall,
@@ -724,7 +742,7 @@ private fun TallyLine(results: PollResults, isOpen: Boolean) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = voteCountLabel(results.totalVotes) + " in",
+            text = if(results.votingMode==com.shkurta.pickle.domain.model.VotingMode.MULTIPLE) "${results.totalVotes} voters · ${results.totalSelections} selections" else voteCountLabel(results.totalVotes) + " in",
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.SemiBold,
             color = c.ink,

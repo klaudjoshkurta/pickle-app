@@ -15,6 +15,7 @@ data class PollOptionDto(
     @SerialName("vote_count") val voteCount: Int = 0,
     @SerialName("suggested_by") val suggestedBy: String? = null,
     @SerialName("created_at") val createdAt: String,
+    val position: Int = 0,
 ) {
     fun toDomain(): PollOption = PollOption(
         id = id,

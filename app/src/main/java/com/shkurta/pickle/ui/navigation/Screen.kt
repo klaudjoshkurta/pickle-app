@@ -18,7 +18,10 @@ Screen {
     data class Poll(val pollId: String) : Screen
 
     @Serializable
-    data object CreatePoll : Screen
+    data class CreatePoll(val starterId: String? = null, val templateId: String? = null) : Screen
+
+    @Serializable
+    data object Templates : Screen
 
     @Serializable
     data object Notifications : Screen

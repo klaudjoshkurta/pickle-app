@@ -47,6 +47,7 @@ fun PollCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {},
     onShareClick: () -> Unit = {},
+    showSuggestionBadge: Boolean = true,
 ) {
     val c = Pickle.colors
     val isOpen = poll.isOpen()
@@ -126,7 +127,7 @@ fun PollCard(
             )
         }
 
-        if (isOpen && pending > 0) {
+        if (showSuggestionBadge && isOpen && pending > 0) {
             Spacer(Modifier.height(10.dp))
             InfoPill(
                 text = if (pending == 1) "1 suggestion to review" else "$pending suggestions to review",
@@ -198,6 +199,7 @@ internal fun voteSummary(poll: Poll): String {
     val votes = poll.totalVotes
     val count = when {
         poll.expectedVoters != null -> "$votes of ${poll.expectedVoters} voted"
+        poll.settings.votingMode == com.shkurta.pickle.domain.model.VotingMode.MULTIPLE -> "$votes voters · ${poll.totalSelections} selections"
         votes == 0 -> "No votes yet"
         votes == 1 -> "1 vote"
         else -> "$votes votes"

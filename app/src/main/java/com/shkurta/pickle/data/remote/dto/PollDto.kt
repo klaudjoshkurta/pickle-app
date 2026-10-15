@@ -3,6 +3,7 @@ package com.shkurta.pickle.data.remote.dto
 import com.shkurta.pickle.domain.model.Poll
 import com.shkurta.pickle.domain.model.PollSettings
 import com.shkurta.pickle.domain.model.PollStatus
+import com.shkurta.pickle.domain.model.VotingMode
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import java.time.Instant
@@ -21,14 +22,19 @@ data class PollDto(
     @SerialName("closed_at") val closedAt: String? = null,
     @SerialName("winner_option_id") val winnerOptionId: String? = null,
     @SerialName("expected_voters") val expectedVoters: Int? = null,
+    @SerialName("voting_mode") val votingMode: String = "SINGLE",
+    @SerialName("voter_count") val voterCount: Int? = null,
+    @SerialName("template_id") val templateId: String? = null,
+    @SerialName("template_round") val templateRound: Int? = null,
     @SerialName("poll_options") val pollOptions: List<PollOptionDto> = emptyList(),
 ) {
     fun toDomain(): Poll = Poll(
         id = id,
         question = question,
         creatorId = creatorId,
-        options = pollOptions.map { it.toDomain() },
+        options = pollOptions.sortedWith(compareBy<PollOptionDto> { it.position }.thenBy { it.createdAt }.thenBy { it.id }).map { it.toDomain() },
         settings = PollSettings(
+            votingMode = VotingMode.valueOf(votingMode),
             allowSuggestions = allowSuggestions,
             requireApproval = requireApproval,
             showResultsBeforeVoting = showResultsBeforeVoting,
@@ -39,6 +45,7 @@ data class PollDto(
         closedAt = closedAt?.let { parseDatabaseInstant(it) },
         winnerOptionId = winnerOptionId,
         expectedVoters = expectedVoters,
+        voterCount = voterCount, templateId = templateId, templateRound = templateRound,
     )
 }
 

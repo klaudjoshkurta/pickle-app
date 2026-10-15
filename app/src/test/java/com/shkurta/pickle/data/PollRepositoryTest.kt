@@ -96,7 +96,7 @@ class PollRepositoryTest {
         repository.vote("poll_1", "opt_1_2")
 
         assertEquals(4, votes("poll_1", "opt_1_2"))
-        assertEquals("opt_1_2", repository.myVotes.value["poll_1"])
+        assertEquals(setOf("opt_1_2"), repository.myVotes.value["poll_1"])
     }
 
     @Test
@@ -107,7 +107,7 @@ class PollRepositoryTest {
         assertEquals(3, votes("poll_1", "opt_1_2"))
         assertEquals(2, votes("poll_1", "opt_1_3"))
         assertEquals(10, poll("poll_1").totalVotes)
-        assertEquals("opt_1_3", repository.myVotes.value["poll_1"])
+        assertEquals(setOf("opt_1_3"), repository.myVotes.value["poll_1"])
     }
 
     @Test
@@ -124,7 +124,7 @@ class PollRepositoryTest {
         // needs the locked version. We'll test the behavior differently.
         // Vote on poll_1 which has allowVoteChange = true by default
         repository.vote("poll_1", "opt_1_2")
-        assertEquals("opt_1_2", repository.myVotes.value["poll_1"])
+        assertEquals(setOf("opt_1_2"), repository.myVotes.value["poll_1"])
     }
 
     @Test

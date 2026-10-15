@@ -10,6 +10,8 @@ data class PollResults(
     val totalVotes: Int,
     val options: List<OptionResult>,
     val outcome: Outcome,
+    val votingMode: VotingMode = VotingMode.SINGLE,
+    val totalSelections: Int = totalVotes,
 )
 
 sealed interface Outcome {
@@ -31,6 +33,8 @@ fun Poll.toResults(): PollResults {
 
     return PollResults(
         totalVotes = total,
+        votingMode = settings.votingMode,
+        totalSelections = totalSelections,
         options = approvedOptions
             .sortedByDescending { it.voteCount }
             .map { option ->

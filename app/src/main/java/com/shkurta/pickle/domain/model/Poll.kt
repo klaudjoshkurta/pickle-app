@@ -12,6 +12,9 @@ data class Poll(
     val createdAt: Instant,
     val closedAt: Instant? = null,
     val winnerOptionId: String? = null,
+    val voterCount: Int? = null,
+    val templateId: String? = null,
+    val templateRound: Int? = null,
     val expectedVoters: Int? = null, // e.g. 4 people in the group chat; null = unknown
 ) {
     /** Options voters can actually see and vote on. */
@@ -23,7 +26,9 @@ data class Poll(
         get() = options.filter { it.status == OptionStatus.PENDING }
 
     val totalVotes: Int
-        get() = approvedOptions.sumOf { it.voteCount }
+        get() = voterCount ?: totalSelections
+
+    val totalSelections: Int get() = approvedOptions.sumOf { it.voteCount }
 
     /** 0f..1f, or null when the group size is unknown. */
     val turnout: Float?
@@ -45,7 +50,10 @@ data class PollOption(
     val createdAt: Instant
 )
 
+enum class VotingMode { SINGLE, MULTIPLE }
+
 data class PollSettings(
+    val votingMode: VotingMode = VotingMode.SINGLE,
     val allowSuggestions: Boolean = false,
     val requireApproval: Boolean = true,   // suggestions go to PENDING first
     val showResultsBeforeVoting: Boolean = false,

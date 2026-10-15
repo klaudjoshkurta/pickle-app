@@ -23,6 +23,7 @@ import javax.inject.Inject
 enum class HomeFilter(val label: String, val sectionLabel: String) {
     MY_POLLS("My polls", "Live now"),
     CLOSED("Closed", "Settled"),
+    TEMPLATES("Templates", "Templates"),
 }
 
 data class HomeUiState(
@@ -31,6 +32,9 @@ data class HomeUiState(
     val polls: List<Poll> = emptyList(),
     val displayName: String? = null,
     val avatarUrl: String? = null,
+    val settledPolls: List<Poll> = emptyList(),
+    val hasAnyPolls: Boolean = false,
+    val hasLoaded: Boolean = false,
     val hasUnreadNotifications: Boolean = false,
 )
 
@@ -46,15 +50,21 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
     private val actions = ActionRunner(viewModelScope)
     val actionState = actions.state
+    private val loaded = kotlinx.coroutines.flow.MutableStateFlow(false)
     private val filter = savedStateHandle.getStateFlow("filter", HomeFilter.MY_POLLS.name)
-    val uiState = combine(observePolls(), observeNotifications(), observeAuthentication.session, filter) {
-            polls, notifications, _, filterName ->
+    val uiState = combine(observePolls(), observeNotifications(), observeAuthentication.session, filter, loaded) {
+            polls, notifications, _, filterName, hasLoaded ->
         val selectedFilter = enumOrDefault(filterName, HomeFilter.MY_POLLS)
         val user = getCurrentUser()
+        val own = polls.filter { user.userId == null || it.isCreator(user.userId) }
+        val settled = own.filter { !it.isOpen() }.sortedByDescending { it.closedAt ?: it.createdAt }
         HomeUiState(
+            hasLoaded = hasLoaded,
+            hasAnyPolls = own.isNotEmpty(),
+            settledPolls = if (selectedFilter == HomeFilter.MY_POLLS) settled.take(3) else emptyList(),
             isDemo = user.userId == null,
             filter = selectedFilter,
-            polls = polls.filter { if (selectedFilter == HomeFilter.MY_POLLS) it.isOpen() else !it.isOpen() },
+            polls = if (selectedFilter == HomeFilter.MY_POLLS) own.filter { it.isOpen() }.sortedByDescending { it.createdAt } else settled,
             displayName = user.displayName,
             avatarUrl = user.avatarUrl,
             hasUnreadNotifications = notifications.any { !it.isRead },
@@ -67,18 +77,20 @@ class HomeViewModel @Inject constructor(
 
     init {
         observeAuthentication.session.onEach {
+            loaded.value = false
             actions.cancel()
             if (it.initialized) refresh()
         }.launchIn(viewModelScope)
     }
     fun retry() = actions.retry(::refresh)
 
-    fun selectFilter(filter: HomeFilter) { savedStateHandle["filter"] = filter.name }
+    fun selectFilter(filter: HomeFilter) { if (filter != HomeFilter.TEMPLATES) savedStateHandle["filter"] = filter.name }
 
     fun refresh() {
         actions.run {
             val polls = com.shkurta.pickle.domain.model.cancellationSafeResult { refreshPolls() }
             val notifications = com.shkurta.pickle.domain.model.cancellationSafeResult { refreshNotifications() }
+            if (polls.isSuccess) loaded.value = true
             polls.getOrThrow()
             notifications.getOrThrow()
         }

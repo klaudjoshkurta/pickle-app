@@ -83,7 +83,10 @@ fun CreatePollScreen(
 
     val action by viewModel.actionState.collectAsStateWithLifecycle()
     ActionFrame(action, viewModel::retry) {
-        CreatePollContent(
+        if(state.isTemplate) TemplateDraftEditor(state,onBack,viewModel::createPoll,
+            viewModel::setQuestion,viewModel::setOption,viewModel::addOption,viewModel::removeOption,
+            viewModel::moveOption,viewModel::setExcludeWinner,viewModel::setSettings,viewModel::setCustomDeadline,viewModel::setExpectedVoters)
+        else CreatePollContent(
             state = state,
             onBack = onBack,
             onCreate = viewModel::createPoll,
@@ -147,6 +150,9 @@ private fun CreatePollContent(
                 .verticalScroll(rememberScrollState())
                 .padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
         ) {
+            com.shkurta.pickle.ui.components.SegmentedToggle(
+                options=com.shkurta.pickle.domain.model.VotingMode.entries,selected=state.settings.votingMode,
+                onSelect={onSettingsChange(state.settings.copy(votingMode=it))},label={if(it==com.shkurta.pickle.domain.model.VotingMode.SINGLE) "Single choice" else "Multi-choice"})
             SectionLabel(text = "What are we deciding?")
             PickleTextField(
                 value = question,

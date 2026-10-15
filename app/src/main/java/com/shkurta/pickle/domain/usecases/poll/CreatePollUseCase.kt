@@ -19,9 +19,10 @@ class CreatePollUseCase @Inject constructor(
         closesAt: Instant?,
         expectedVoters: Int?,
         requestId: String = java.util.UUID.randomUUID().toString(),
+        templateId: String? = null,
     ): Poll? {
         val creatorId = auth.currentUserId ?: return null
         if (!isValidPollInput(question, optionTexts)) return null
-        return polls.createPoll(question, optionTexts, settings, closesAt, expectedVoters, creatorId, requestId)
+        return polls.createPoll(question, optionTexts, settings, closesAt, expectedVoters, creatorId, requestId, templateId)
     }
 }
