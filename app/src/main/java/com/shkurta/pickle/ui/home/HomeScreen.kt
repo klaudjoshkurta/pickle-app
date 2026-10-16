@@ -74,8 +74,10 @@ fun HomeScreen(
     onTemplatesClick: () -> Unit = {}, onStarterClick: (String) -> Unit = {},
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
+
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val action by viewModel.actionState.collectAsStateWithLifecycle()
+
     ActionFrame(
         state = action,
         onRetry = viewModel::retry
@@ -463,8 +465,11 @@ fun HomeTopBar(
     onNotificationsClick: () -> Unit = {},
     onMenuClick: () -> Unit = {}
 ) {
-    TopAppBar(modifier = modifier, title = { PickleBrand() }, actions = {
-        if (showCreate) PickleButton(
+    TopAppBar(
+        modifier = modifier,
+        title = {},
+        actions = {
+            if (showCreate) PickleButton(
             stringResource(R.string.new_poll),
             onCreateClick,
             style = PickleButtonStyle.Outline,
