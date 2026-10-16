@@ -17,6 +17,7 @@ interface AuthRepository {
         password: String,
         displayName: String,
         avatarUrl: String,
+        language: String = "en",
     ): Result<Unit>
     suspend fun signIn(email: String, password: String): Result<Unit>
     suspend fun signOut()

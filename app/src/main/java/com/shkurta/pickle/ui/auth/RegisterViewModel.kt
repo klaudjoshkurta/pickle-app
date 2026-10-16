@@ -45,7 +45,7 @@ class RegisterViewModel @Inject constructor(
     fun nextStep() = edit {
         it.copy(touched = AuthField.entries.toSet(), step = if (it.detailsValid) RegistrationStep.Avatar else RegistrationStep.Details)
     }
-    fun submit() {
+    fun submit(language: String = "en") {
         val state = uiState.value
         if (state.isLoading || state.status == AuthStatus.Success) return
         if (!state.detailsValid) { nextStep(); return }
@@ -54,7 +54,7 @@ class RegisterViewModel @Inject constructor(
         mutableState.value = mutableState.value.copy(status = AuthStatus.Loading)
         viewModelScope.launch {
             val result = cancellationSafeResult {
-                signUp(state.email.trim(), state.password, state.name.trim(), DiceBear.avatarUrl(seed)).getOrThrow()
+                signUp(state.email.trim(), state.password, state.name.trim(), DiceBear.avatarUrl(seed), language).getOrThrow()
             }
             mutableState.value = mutableState.value.copy(status = if (result.isSuccess) AuthStatus.Success else AuthStatus.Error)
         }

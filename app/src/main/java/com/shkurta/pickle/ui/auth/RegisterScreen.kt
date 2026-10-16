@@ -9,6 +9,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.text.input.*
@@ -22,9 +23,10 @@ import com.shkurta.pickle.ui.theme.Pickle
 @Composable
 fun RegisterScreen(onBack: () -> Unit, onLogin: () -> Unit, viewModel: RegisterViewModel = hiltViewModel()) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
+    val language = LocalConfiguration.current.locales.get(0)?.language ?: "en"
     RegisterContent(state, onBack, onLogin, viewModel::setName, viewModel::setEmail, viewModel::setPassword,
         viewModel::touch, viewModel::nextStep, viewModel::previousStep, viewModel::selectAvatar,
-        viewModel::shuffleAvatars, viewModel::submit)
+        viewModel::shuffleAvatars, { viewModel.submit(language) })
 }
 
 @Composable

@@ -32,6 +32,7 @@ class FakeAuthRepository : AuthRepository {
     var lastEmail: String? = null
     var lastName: String? = null
     var lastAvatar: String? = null
+    var lastLanguage: String? = null
 
     override suspend fun signIn(email: String, password: String): Result<Unit> {
         signInCalls++
@@ -40,13 +41,14 @@ class FakeAuthRepository : AuthRepository {
         lastEmail = email
         return result
     }
-    override suspend fun signUp(email: String, password: String, displayName: String, avatarUrl: String): Result<Unit> {
+    override suspend fun signUp(email: String, password: String, displayName: String, avatarUrl: String, language: String): Result<Unit> {
         signUpCalls++
         gate?.await()
         failure?.let { throw it }
         lastEmail = email
         lastName = displayName
         lastAvatar = avatarUrl
+        lastLanguage = language
         return result
     }
     override suspend fun signOut() {

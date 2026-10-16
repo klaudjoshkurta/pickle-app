@@ -67,6 +67,7 @@ class AuthRepositoryImpl @Inject constructor(
         password: String,
         displayName: String,
         avatarUrl: String,
+        language: String,
     ): Result<Unit> = cancellationSafeResult {
         auth.signUpWith(Email) {
             this.email = email
@@ -74,6 +75,7 @@ class AuthRepositoryImpl @Inject constructor(
             data = buildJsonObject {
                 put("display_name", displayName)
                 put("avatar_url", avatarUrl)
+                put("language", language)
             }
         }
     }

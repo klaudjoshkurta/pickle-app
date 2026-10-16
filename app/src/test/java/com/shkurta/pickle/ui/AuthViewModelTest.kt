@@ -22,6 +22,19 @@ class AuthViewModelTest {
         vm.setName(" Alex "); vm.setEmail(" alex@example.com "); vm.setPassword("secret")
     }
 
+    @Test fun signupPassesSupportedEmailLanguageWithEnglishFallback() = runTest {
+        mapOf("el" to "el", "el-GR" to "el", "el_CY" to "el", "en" to "en", "de-DE" to "en", "" to "en").forEach { (language, expected) ->
+            val vm = register()
+            fill(vm)
+            vm.nextStep()
+            vm.selectAvatar(vm.uiState.value.avatarSeeds.first())
+            vm.submit(language)
+            runCurrent()
+            assertEquals(language, expected, auth.lastLanguage)
+            assertEquals(AuthStatus.Success, vm.uiState.value.status)
+        }
+    }
+
     @Test fun loginValidatesOnBlurAndAttemptThenTrimsAndRetries() = runTest {
         val vm = login()
         assertFalse(vm.uiState.value.emailError)
@@ -67,6 +80,7 @@ class AuthViewModelTest {
         assertEquals("Alex", auth.lastName)
         assertEquals("alex@example.com", auth.lastEmail)
         assertEquals(DiceBear.avatarUrl(seed), auth.lastAvatar)
+        assertEquals("en", auth.lastLanguage)
         assertEquals(AuthStatus.Success, vm.uiState.value.status)
     }
 

@@ -31,6 +31,7 @@ import java.util.Locale
 /** Auth fixtures use a fake repository and never create a real account. */
 class AuthInstrumentedTest {
     @get:Rule val compose = createComposeRule()
+    private var submittedLanguage: String? = null
     private val auth = object : AuthRepository {
         override val currentUserId: String? = null
         override val displayName: String? = null
@@ -38,7 +39,10 @@ class AuthInstrumentedTest {
         override val isAuthenticated = MutableStateFlow(false)
         override val session = MutableStateFlow(AuthSession(true))
         override suspend fun signIn(email: String, password: String) = Result.failure<Unit>(IllegalStateException())
-        override suspend fun signUp(email: String, password: String, displayName: String, avatarUrl: String) = Result.failure<Unit>(IllegalStateException())
+        override suspend fun signUp(email: String, password: String, displayName: String, avatarUrl: String, language: String): Result<Unit> {
+            submittedLanguage = language
+            return Result.failure(IllegalStateException())
+        }
         override suspend fun signOut() = Unit
     }
     private fun render(greek: Boolean = false, large: Boolean = false, content: @Composable () -> Unit) {
@@ -66,7 +70,7 @@ class AuthInstrumentedTest {
     private fun registration(vm: RegisterViewModel, greek: Boolean = false, large: Boolean = false) = render(greek, large) {
         val state by vm.uiState.collectAsState()
         RegisterContent(state, {}, {}, vm::setName, vm::setEmail, vm::setPassword, vm::touch,
-            vm::nextStep, vm::previousStep, vm::selectAvatar, vm::shuffleAvatars, vm::submit)
+            vm::nextStep, vm::previousStep, vm::selectAvatar, vm::shuffleAvatars, { vm.submit() })
     }
     private fun capture(name: String) {
         val context = androidx.test.platform.app.InstrumentationRegistry.getInstrumentation().targetContext
@@ -122,6 +126,14 @@ class AuthInstrumentedTest {
         capture("auth-register-greek-large")
         compose.onNodeWithText("Συνέχεια").performScrollTo().performClick()
         compose.onNodeWithText("Πληκτρολογήστε μια έγκυρη διεύθυνση email.").performScrollTo().assertIsDisplayed()
+    }
+    @Test fun signupUsesTheAppLanguageForConfirmationEmail() {
+        val vm = RegisterViewModel(SavedStateHandle(), SignUpUseCase(auth))
+        vm.setName("Alex"); vm.setEmail("alex@example.com"); vm.setPassword("secret")
+        vm.nextStep(); vm.selectAvatar(vm.uiState.value.avatarSeeds.first())
+        render(greek = true) { RegisterScreen(onBack = {}, onLogin = {}, viewModel = vm) }
+        compose.onNodeWithText("Δημιουργία λογαριασμού").performScrollTo().performClick()
+        compose.runOnIdle { assertEquals("el", submittedLanguage) }
     }
     @Test fun narrowLargeTextLogin() {
         render(greek = true, large = true) { LoginContent(LoginUiState(), {}, {}, {}, {}, {}, {}) }
