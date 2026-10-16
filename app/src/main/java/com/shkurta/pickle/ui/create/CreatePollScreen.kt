@@ -1,5 +1,6 @@
 package com.shkurta.pickle.ui.create
 
+import androidx.compose.ui.res.stringResource
 import com.shkurta.pickle.ui.components.ActionFrame
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.BorderStroke
@@ -132,7 +133,7 @@ private fun CreatePollContent(
         topBar = { CreatePollTopBar(onBack = onBack) },
         bottomBar = {
             PickleButton(
-                text = "Create & get the link",
+                text = stringResource(R.string.create_link),
                 onClick = onCreate,
                 enabled = isValid,
                 style = PickleButtonStyle.Teal,
@@ -152,12 +153,12 @@ private fun CreatePollContent(
         ) {
             com.shkurta.pickle.ui.components.SegmentedToggle(
                 options=com.shkurta.pickle.domain.model.VotingMode.entries,selected=state.settings.votingMode,
-                onSelect={onSettingsChange(state.settings.copy(votingMode=it))},label={if(it==com.shkurta.pickle.domain.model.VotingMode.SINGLE) "Single choice" else "Multi-choice"})
-            SectionLabel(text = "What are we deciding?")
+                onSelect={onSettingsChange(state.settings.copy(votingMode=it))},label={if(it==com.shkurta.pickle.domain.model.VotingMode.SINGLE) stringResource(R.string.single_choice) else stringResource(R.string.multi_choice)})
+            SectionLabel(text = stringResource(R.string.deciding_question))
             PickleTextField(
                 value = question,
                 onValueChange = onQuestionChange,
-                placeholder = "Pizza night: what are we ordering?",
+                placeholder = stringResource(R.string.pizza_question),
                 singleLine = false,
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Sentences,
@@ -166,15 +167,15 @@ private fun CreatePollContent(
             )
 
             SectionLabel(
-                text = "Options",
-                trailing = "$filledOptions of $MAX_POLL_OPTIONS",
+                text = stringResource(R.string.options),
+                trailing = stringResource(R.string.options_count, filledOptions, MAX_POLL_OPTIONS),
             )
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 options.forEachIndexed { index, text ->
                     PickleTextField(
                         value = text,
                         onValueChange = { newText -> onOptionChange(index, newText) },
-                        placeholder = "Option ${index + 1}",
+                        placeholder = stringResource(R.string.option_number, index + 1),
                         keyboardOptions = KeyboardOptions(
                             capitalization = KeyboardCapitalization.Sentences,
                             imeAction = ImeAction.Next,
@@ -187,7 +188,7 @@ private fun CreatePollContent(
                                 ) {
                                     Icon(
                                         painter = painterResource(R.drawable.ic_close),
-                                        contentDescription = "Remove option ${index + 1}",
+                                        contentDescription = stringResource(R.string.remove_option, index + 1),
                                         tint = c.inkMuted,
                                         modifier = Modifier.size(18.dp),
                                     )
@@ -199,37 +200,37 @@ private fun CreatePollContent(
                     )
                 }
                 DashedActionButton(
-                    text = "Add an option",
+                    text = stringResource(R.string.add_option),
                     onClick = onAddOption,
                     enabled = options.size < MAX_POLL_OPTIONS,
                 )
             }
             Text(
-                text = "Need at least $MIN_POLL_OPTIONS, up to $MAX_POLL_OPTIONS.",
+                text = stringResource(R.string.options_limits, MIN_POLL_OPTIONS, MAX_POLL_OPTIONS),
                 style = MaterialTheme.typography.labelSmall,
                 color = c.inkMuted,
                 modifier = Modifier.padding(start = 2.dp, top = 8.dp),
             )
 
-            SectionLabel(text = "When does voting close?")
+            SectionLabel(text = stringResource(R.string.when_close))
             Row(
                 modifier = Modifier.horizontalScroll(rememberScrollState()),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Deadline.entries.forEach { entry ->
                     DeadlinePill(
-                        label = entry.label,
+                        label = stringResource(entry.label),
                         selected = entry == deadline,
                         onClick = { onDeadlineChange(entry) },
                     )
                 }
             }
 
-            SectionLabel(text = "How do people vote?")
+            SectionLabel(text = stringResource(R.string.how_vote))
             PickleCard(contentPadding = PaddingValues(0.dp)) {
                 SettingRow(
-                    label = "Voters can suggest options",
-                    description = "Let the crew add ideas",
+                    label = stringResource(R.string.voters_suggest),
+                    description = stringResource(R.string.suggest_description),
                     checked = allowSuggestions,
                     onCheckedChange = { onSettingsChange(state.settings.copy(allowSuggestions = it)) },
                 )
@@ -237,8 +238,8 @@ private fun CreatePollContent(
                     Column {
                         CardDivider()
                         SettingRow(
-                            label = "Approve suggestions first",
-                            description = "You approve each one before it joins",
+                            label = stringResource(R.string.approve_suggestions),
+                            description = stringResource(R.string.approval_description),
                             checked = requireApproval,
                             onCheckedChange = { onSettingsChange(state.settings.copy(requireApproval = it)) },
                         )
@@ -246,15 +247,15 @@ private fun CreatePollContent(
                 }
                 CardDivider()
                 SettingRow(
-                    label = "Show results before voting",
-                    description = "Off = results only after you vote, no bandwagons",
+                    label = stringResource(R.string.show_results),
+                    description = stringResource(R.string.results_description),
                     checked = showResultsBeforeVoting,
                     onCheckedChange = { onSettingsChange(state.settings.copy(showResultsBeforeVoting = it)) },
                 )
                 CardDivider()
                 SettingRow(
-                    label = "Allow changing vote",
-                    description = "Voters can switch while the poll is open",
+                    label = stringResource(R.string.allow_changing_vote),
+                    description = stringResource(R.string.change_vote_description),
                     checked = allowVoteChange,
                     onCheckedChange = { onSettingsChange(state.settings.copy(allowVoteChange = it)) },
                 )
@@ -278,7 +279,7 @@ private fun CreatePollTopBar(
         modifier = modifier.padding(horizontal = 8.dp),
         title = {
             Text(
-                text = "New poll",
+                text = stringResource(R.string.new_poll),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(start = 8.dp),
             )
@@ -286,7 +287,7 @@ private fun CreatePollTopBar(
         navigationIcon = {
             CircleIconButton(
                 iconRes = R.drawable.ic_close,
-                contentDescription = "Cancel",
+                contentDescription = stringResource(R.string.cancel),
                 onClick = onBack,
             )
         },
@@ -419,8 +420,8 @@ private fun ExpectedVotersRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         SettingText(
-            label = "Expected voters",
-            description = "Optional, shows turnout on the poll",
+            label = stringResource(R.string.expected_voters),
+            description = stringResource(R.string.turnout_description),
             modifier = Modifier.weight(1f),
         )
         BasicTextField(

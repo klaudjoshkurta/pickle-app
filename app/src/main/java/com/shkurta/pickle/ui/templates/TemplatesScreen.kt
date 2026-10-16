@@ -1,5 +1,7 @@
 package com.shkurta.pickle.ui.templates
 
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -50,35 +52,35 @@ fun TemplatesScreen(onBack: () -> Unit, onUse: (String?,String?) -> Unit, viewMo
 @Composable
 fun TemplatesContent(templates: List<PollTemplate>, polls: List<Poll>, onBack: () -> Unit, onUse: (String?,String?) -> Unit) {
     Scaffold(containerColor=Pickle.colors.canvas, topBar={
-        TopAppBar(title={Text("Templates",style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold)},navigationIcon={CircleIconButton(R.drawable.ic_arrow_back,"Back",onBack)},
+        TopAppBar(title={Text(stringResource(R.string.templates),style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold)},navigationIcon={CircleIconButton(R.drawable.ic_arrow_back,stringResource(R.string.back),onBack)},
             colors=TopAppBarDefaults.topAppBarColors(containerColor=Pickle.colors.canvas))
     }) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal=20.dp,vertical=8.dp),verticalArrangement=Arrangement.spacedBy(14.dp)) {
-            Text("Same question every Friday? Start from last time.",style=MaterialTheme.typography.bodyMedium,color=Pickle.colors.inkMuted)
-            Text("Your templates",style=MaterialTheme.typography.labelLarge,color=Pickle.colors.inkMuted)
-            if(templates.isEmpty()) Text("Save one of your polls as a template to start a tradition.",style=MaterialTheme.typography.bodySmall,color=Pickle.colors.inkMuted)
+            Text(stringResource(R.string.template_intro),style=MaterialTheme.typography.bodyMedium,color=Pickle.colors.inkMuted)
+            Text(stringResource(R.string.your_templates),style=MaterialTheme.typography.labelLarge,color=Pickle.colors.inkMuted)
+            if(templates.isEmpty()) Text(stringResource(R.string.templates_empty),style=MaterialTheme.typography.bodySmall,color=Pickle.colors.inkMuted)
             templates.forEach { template ->
                 PickleCard {
                     Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
                         Surface(color=Pickle.colors.mustard,shape=MaterialTheme.shapes.medium,border=androidx.compose.foundation.BorderStroke(1.5.dp,Pickle.colors.lineStrong)) { Box(Modifier.padding(10.dp)) { TemplateIcon(template.icon) } }
                         Column(Modifier.weight(1f)) {
                             Text("${template.name}  ↻",style=MaterialTheme.typography.titleSmall,fontWeight=FontWeight.Bold)
-                            Text("Saved from ${template.roundsCount} ${if(template.roundsCount==1) "poll" else "polls"} · ${template.seed(polls).options.size} options${template.schedule?.let { " · ${it.label()}" }.orEmpty()}",style=MaterialTheme.typography.bodySmall,color=Pickle.colors.inkMuted)
+                            Text(pluralStringResource(R.plurals.template_rounds, template.roundsCount, template.roundsCount, template.seed(polls).options.size) + template.schedule?.let { " · " + it.localizedLabel() }.orEmpty(),style=MaterialTheme.typography.bodySmall,color=Pickle.colors.inkMuted)
                         }
-                        PickleButton("Use",{onUse(null,template.id)},height=40.dp,style=PickleButtonStyle.Teal)
+                        PickleButton(stringResource(R.string.use_template),{onUse(null,template.id)},height=40.dp,style=PickleButtonStyle.Teal)
                     }
                 }
             }
-            Text("Starters",style=MaterialTheme.typography.labelLarge,color=Pickle.colors.inkMuted)
+            Text(stringResource(R.string.starters),style=MaterialTheme.typography.labelLarge,color=Pickle.colors.inkMuted)
             PollStarter.entries.chunked(2).forEach { pair ->
                 Row(horizontalArrangement=Arrangement.spacedBy(12.dp)) {
                     pair.forEach { starter ->
                         PickleCard(modifier=Modifier.weight(1f),onClick={onUse(starter.id,null)}) {
                             TemplateIcon(starter.icon)
                             Spacer(Modifier.height(14.dp))
-                            Text(starter.title,style=MaterialTheme.typography.titleSmall,fontWeight=FontWeight.Bold)
+                            Text(starter.localizedTitle(),style=MaterialTheme.typography.titleSmall,fontWeight=FontWeight.Bold)
                             Spacer(Modifier.height(6.dp))
-                            Text(starter.subtitle,style=MaterialTheme.typography.bodySmall,color=Pickle.colors.inkMuted)
+                            Text(starter.localizedSubtitle(),style=MaterialTheme.typography.bodySmall,color=Pickle.colors.inkMuted)
                         }
                     }
                 }

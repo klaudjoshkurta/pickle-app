@@ -26,7 +26,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-data class ActionState(val busy: Boolean = false, val message: String? = null, val saved: Boolean = false)
+data class ActionState(val busy: Boolean = false, val message: Int? = null, val saved: Boolean = false)
 
 val LocalActionsEnabled = staticCompositionLocalOf { true }
 
@@ -68,10 +68,10 @@ class ActionRunner(private val scope: CoroutineScope) {
                 Logger.getLogger("PickleAction").warning("Action failed: ${e.javaClass.simpleName}")
                 mutableState.value = ActionState(
                     message = when (e) {
-                        is SavedRefreshException -> "Saved. Couldn't refresh the latest data."
-                        is SignInRequiredException -> "Sign in to use live polls."
-                        is InvalidRemoteDataException -> "Some data couldn't be loaded. Please refresh."
-                        else -> "Couldn't complete this request. Check your connection and try again."
+                        is SavedRefreshException -> com.shkurta.pickle.R.string.error_saved_refresh
+                        is SignInRequiredException -> com.shkurta.pickle.R.string.error_sign_in
+                        is InvalidRemoteDataException -> com.shkurta.pickle.R.string.error_invalid_data
+                        else -> com.shkurta.pickle.R.string.error_request
                     },
                     saved = e is SavedRefreshException,
                 )
@@ -99,9 +99,9 @@ fun ActionStatus(state: ActionState, onRetry: () -> Unit) {
     Column(Modifier.fillMaxWidth()) {
         if (state.busy) LinearProgressIndicator(Modifier.fillMaxWidth())
         state.message?.let {
-            Text(it, Modifier.padding(horizontal = 16.dp))
+            Text(androidx.compose.ui.res.stringResource(it), Modifier.padding(horizontal = 16.dp))
             TextButton(onClick = onRetry, enabled = !state.busy) {
-                Text(if (state.saved) "Refresh" else "Retry")
+                Text(if (state.saved) androidx.compose.ui.res.stringResource(com.shkurta.pickle.R.string.refresh) else androidx.compose.ui.res.stringResource(com.shkurta.pickle.R.string.retry))
             }
         }
     }

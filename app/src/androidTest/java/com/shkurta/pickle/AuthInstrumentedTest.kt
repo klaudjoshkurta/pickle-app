@@ -48,8 +48,9 @@ class AuthInstrumentedTest {
     private fun render(greek: Boolean = false, large: Boolean = false, content: @Composable () -> Unit) {
         compose.setContent {
             val context = LocalContext.current
-            val localized = remember {
-                context.createConfigurationContext(Configuration(context.resources.configuration).apply {
+            val configuration = LocalConfiguration.current
+            val localized = remember(context, configuration, greek) {
+                context.createConfigurationContext(Configuration(configuration).apply {
                     setLocale(Locale.forLanguageTag(if (greek) "el" else "en"))
                 })
             }

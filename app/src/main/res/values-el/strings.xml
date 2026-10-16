@@ -7,7 +7,7 @@
     <string name="onboarding_hero_label">Βραδιά πίτσας · προηγείται</string>
     <string name="onboarding_hero_option">Detroit-style από Emmy’s</string>
     <string name="onboarding_hero_votes">από 11 ψήφους</string>
-    <string name="onboarding_guest_note">Ως επισκέπτης μπορείτε να εξερευνήσετε πριν εγγραφείτε.</string>
+    <string name="onboarding_guest_note">Εξερευνήστε ενδεικτικές ψηφοφορίες εκτός σύνδεσης. Συνδεθείτε για να δημιουργήσετε ψηφοφορίες και να ψηφίσετε.</string>
     <string name="create_account">Δημιουργία λογαριασμού</string>
     <string name="try_it">Δοκιμή ως επισκέπτης</string>
     <string name="already_have_an_account">"Έχετε ήδη λογαριασμό; "</string>
@@ -48,4 +48,286 @@
     <string name="auth_register_failed">Η δημιουργία λογαριασμού απέτυχε. Ελέγξτε τη σύνδεσή σας και τα στοιχεία σας και δοκιμάστε ξανά.</string>
     <string name="auth_success">Τα στοιχεία έγιναν δεκτά. Αν απαιτείται επιβεβαίωση email, ελέγξτε τα εισερχόμενά σας πριν συνδεθείτε.</string>
     <string name="auth_login_success">Συνδεθήκατε. Ανοίγουμε τις ψηφοφορίες σας…</string>
+    <string name="new_poll">Νέα ψηφοφορία</string>
+    <string name="cancel">Ακύρωση</string>
+    <string name="from_template">Από πρότυπο</string>
+    <string name="create_link">Δημιουργία και λήψη συνδέσμου</string>
+    <string name="move_up">Μετακίνηση πάνω</string>
+    <string name="move_down">Μετακίνηση κάτω</string>
+    <string name="move_option_up">Μετακίνηση επιλογής πάνω</string>
+    <string name="move_option_down">Μετακίνηση επιλογής κάτω</string>
+    <string name="driver_name">Όνομα οδηγού</string>
+    <string name="runner_up">Δεύτερη θέση την προηγούμενη φορά</string>
+    <string name="new_label">Νέο</string>
+    <string name="add_option">Προσθήκη επιλογής</string>
+    <string name="add_option_plus">+ Προσθήκη επιλογής</string>
+    <string name="exclude_winner">Εξαίρεση του προηγούμενου νικητή</string>
+    <string name="options_validation">Χρησιμοποιήστε 2–10 διαφορετικές, μη κενές επιλογές για να δημιουργήσετε ψηφοφορία.</string>
+    <string name="poll_settings">Ρυθμίσεις ψηφοφορίας</string>
+    <string name="single_choice">Μία επιλογή</string>
+    <string name="multi_choice">Πολλαπλές επιλογές</string>
+    <string name="closing_time">Ώρα λήξης</string>
+    <string name="choose_datetime">Επιλογή ημερομηνίας και ώρας</string>
+    <string name="no_deadline">Χωρίς προθεσμία</string>
+    <string name="allow_suggestions">Να επιτρέπονται προτάσεις</string>
+    <string name="approve_suggestions">Έγκριση προτάσεων πρώτα</string>
+    <string name="show_results">Εμφάνιση αποτελεσμάτων πριν από την ψήφο</string>
+    <string name="allow_vote_changes">Να επιτρέπεται αλλαγή ψήφου</string>
+    <string name="expected_voters_optional">Αναμενόμενοι ψηφοφόροι (προαιρετικό)</string>
+    <string name="done">Τέλος</string>
+    <string name="next">Επόμενο</string>
+    <string name="future_time_error">Επιλέξτε μελλοντική ώρα.</string>
+    <string name="set_time">Ορισμός ώρας</string>
+    <string name="deciding_question">Τι αποφασίζουμε;</string>
+    <string name="pizza_question">Βραδιά πίτσας: τι παραγγέλνουμε;</string>
+    <string name="options">Επιλογές</string>
+    <string name="when_close">Πότε λήγει η ψηφοφορία;</string>
+    <string name="how_vote">Πώς ψηφίζει η παρέα;</string>
+    <string name="voters_suggest">Οι ψηφοφόροι μπορούν να προτείνουν επιλογές</string>
+    <string name="suggest_description">Αφήστε την παρέα να προσθέσει ιδέες</string>
+    <string name="approval_description">Εγκρίνετε κάθε πρόταση πριν προστεθεί</string>
+    <string name="results_description">Αν είναι ανενεργό, τα αποτελέσματα εμφανίζονται μόνο αφού ψηφίσετε</string>
+    <string name="allow_changing_vote">Να επιτρέπεται αλλαγή ψήφου</string>
+    <string name="change_vote_description">Οι ψηφοφόροι μπορούν να αλλάξουν ψήφο όσο η ψηφοφορία είναι ανοιχτή</string>
+    <string name="expected_voters">Αναμενόμενοι ψηφοφόροι</string>
+    <string name="turnout_description">Προαιρετικό, εμφανίζει τη συμμετοχή στην ψηφοφορία</string>
+    <string name="start_first_poll">Ξεκινήστε την πρώτη σας ψηφοφορία</string>
+    <string name="polls_load_error">Δεν ήταν δυνατή η φόρτωση των ψηφοφοριών σας. Πατήστε «Επανάληψη» παρακάτω.</string>
+    <string name="offline_home">Δοκιμή εκτός σύνδεσης · Συνδεθείτε για ζωντανές ψηφοφορίες</string>
+    <string name="start_template">Ξεκινήστε από πρότυπο</string>
+    <string name="blank_poll">Κενή ψηφοφορία</string>
+    <string name="polls_live_here">Εδώ θα βρίσκονται οι ψηφοφορίες σας</string>
+    <string name="live_float">Οι ενεργές εμφανίζονται πρώτες, με ζωντανή ένδειξη.</string>
+    <string name="live_now">Ενεργές τώρα</string>
+    <string name="settled">Ολοκληρωμένες</string>
+    <string name="no_live_polls">Δεν υπάρχουν ενεργές ψηφοφορίες. Ξεκινήστε μια νέα ή χρησιμοποιήστε πρότυπο.</string>
+    <string name="no_settled_polls">Καμία ολοκληρωμένη ψηφοφορία ακόμα. Εδώ θα εμφανίζονται οι ψηφοφορίες που έληξαν και οι νικητές τους.</string>
+    <string name="ask_question">Κάντε την ερώτηση</string>
+    <string name="question_examples">Πίτσα; Ταινία; Πού θα βρεθούμε;</string>
+    <string name="add_options_step">Προσθέστε 2–10 επιλογές</string>
+    <string name="template_step">Ή αφήστε ένα πρότυπο να τις συμπληρώσει</string>
+    <string name="share_link_step">Μοιραστείτε τον σύνδεσμο</string>
+    <string name="friends_vote_step">Η παρέα ψηφίζει — χωρίς εγγραφή ή εφαρμογή</string>
+    <string name="pizza_night">Βραδιά πίτσας</string>
+    <string name="nobody_voted">Δεν ψήφισε κανείς</string>
+    <string name="morning">Καλημέρα</string>
+    <string name="afternoon">Καλό απόγευμα</string>
+    <string name="evening">Καλησπέρα</string>
+    <string name="your_polls">Οι ψηφοφορίες σας</string>
+    <string name="my_polls">Οι ψηφοφορίες μου</string>
+    <string name="closed">Κλειστές</string>
+    <string name="templates">Πρότυπα</string>
+    <string name="profile_description">Έτσι σας βλέπει η παρέα</string>
+    <string name="polls">Ψηφοφορίες</string>
+    <string name="live">Ενεργές</string>
+    <string name="votes_label">Ψήφοι</string>
+    <string name="notifications">Ειδοποιήσεις</string>
+    <string name="about">Σχετικά</string>
+    <string name="share_pickle">Μοιραστείτε το Pickle</string>
+    <string name="version">Έκδοση</string>
+    <string name="sign_out">Αποσύνδεση</string>
+    <string name="account">Λογαριασμός</string>
+    <string name="back">Πίσω</string>
+    <string name="share">Κοινοποίηση</string>
+    <string name="refresh">Ανανέωση</string>
+    <string name="retry">Επανάληψη</string>
+    <string name="mark_all_read">Σήμανση όλων ως αναγνωσμένων</string>
+    <string name="no_notifications">Δεν υπάρχουν ειδοποιήσεις ακόμα</string>
+    <string name="poll_live">Η ψηφοφορία σας είναι ενεργή</string>
+    <string name="poll_closed">Η ψηφοφορία έληξε</string>
+    <string name="today">Σήμερα</string>
+    <string name="yesterday">Χθες</string>
+    <string name="earlier">Παλαιότερα</string>
+    <string name="now">τώρα</string>
+    <string name="template_intro">Η ίδια ερώτηση κάθε Παρασκευή; Ξεκινήστε από την προηγούμενη φορά.</string>
+    <string name="your_templates">Τα πρότυπά σας</string>
+    <string name="templates_empty">Αποθηκεύστε μια ψηφοφορία ως πρότυπο για να ξεκινήσετε μια παράδοση.</string>
+    <string name="use_template">Χρήση</string>
+    <string name="starters">Έτοιμες ιδέες</string>
+    <string name="save_as_template">Αποθήκευση ως πρότυπο</string>
+    <string name="edit_template">Επεξεργασία προτύπου</string>
+    <string name="template_name">Όνομα προτύπου</string>
+    <string name="weekly_closing">Εβδομαδιαία ώρα λήξης</string>
+    <string name="local_time_hint">Τοπική ώρα (HH:mm)</string>
+    <string name="timezone_hint">Ζώνη ώρας, π.χ. Europe/Athens</string>
+    <string name="schedule_error">Εισαγάγετε έγκυρη ώρα και ζώνη ώρας IANA.</string>
+    <string name="template_private">Κάθε χρήση ανοίγει ένα επεξεργάσιμο προσχέδιο. Το πρότυπό σας είναι ιδιωτικό.</string>
+    <string name="save_template">Αποθήκευση προτύπου</string>
+    <string name="offline_results">Δοκιμή εκτός σύνδεσης · Ενδεικτικά αποτελέσματα</string>
+    <string name="sign_in_live">Συνδεθείτε για ζωντανές ψηφοφορίες</string>
+    <string name="pick_option">Διαλέξτε μια επιλογή</string>
+    <string name="keep_vote">Διατήρηση της ψήφου μου</string>
+    <string name="end_voting">Λήξη ψηφοφορίας</string>
+    <string name="ending_description">Η λήξη κλειδώνει την καταμέτρηση και εμφανίζει το αποτέλεσμα σε όλους.</string>
+    <string name="youre_in">Η ψήφος σας καταχωρίστηκε!</string>
+    <string name="change">Αλλαγή</string>
+    <string name="pick_all">Διαλέξτε όσες σας ταιριάζουν</string>
+    <string name="pick_one">Διαλέξτε μία</string>
+    <string name="results_after_vote">Τα αποτελέσματα εμφανίζονται αφού ψηφίσετε</string>
+    <string name="tied_badge">ΙΣΟΠΑΛΙΑ</string>
+    <string name="lead_badge">ΠΡΟΗΓΕΙΤΑΙ</string>
+    <string name="winner_badge">ΝΙΚΗΤΗΣ</string>
+    <string name="dead_heat">Απόλυτη ισοπαλία!</string>
+    <string name="crew_picked">Η παρέα επέλεξε</string>
+    <string name="your_pick">Η επιλογή σας</string>
+    <string name="anyones_game">" — όλα παίζονται ακόμα"</string>
+    <string name="no_votes">Καμία ψήφος ακόμα</string>
+    <string name="share_watch">Μοιραστείτε τον σύνδεσμο και δείτε τις ψήφους να έρχονται.</string>
+    <string name="suggest_option">Προτείνετε μια επιλογή</string>
+    <string name="your_idea">Η ιδέα σας</string>
+    <string name="send">Αποστολή</string>
+    <string name="suggestion_sent">Η ιδέα σας στάλθηκε στον δημιουργό. Αν προστεθεί, μπορείτε να αλλάξετε την ψήφο σας.</string>
+    <string name="suggestion_review">Προσθέστε την με 0 ψήφους — εσείς αποφασίζετε.</string>
+    <string name="add_it">Προσθήκη</string>
+    <string name="not_this_time">Όχι αυτή τη φορά</string>
+    <string name="anyone_link">Όποιος έχει τον σύνδεσμο μπορεί να ψηφίσει</string>
+    <string name="copied">Αντιγράφηκε</string>
+    <string name="copy_link">Αντιγραφή συνδέσμου</string>
+    <string name="share_ellipsis">Κοινοποίηση…</string>
+    <string name="end_now">Να λήξει τώρα η ψηφοφορία;</string>
+    <string name="ending_result">Η λήξη κλειδώνει την καταμέτρηση και εμφανίζει το αποτέλεσμα σε όλους.</string>
+    <string name="nobody_yet">Δεν έχει ψηφίσει κανείς ακόμα</string>
+    <string name="end_reveal">Λήξη και εμφάνιση</string>
+    <string name="keep_open">Να παραμείνει ανοιχτή</string>
+    <string name="poll_unavailable">Η ψηφοφορία δεν είναι διαθέσιμη</string>
+    <string name="share_link">Κοινοποίηση συνδέσμου</string>
+    <string name="voting_open">Η ψηφοφορία είναι ανοιχτή</string>
+    <string name="voting_closed">Η ψηφοφορία έληξε</string>
+    <string name="deadline_hour">Σε 1 ώρα</string>
+    <string name="deadline_day">1 ημέρα</string>
+    <string name="deadline_three_days">3 ημέρες</string>
+    <string name="deadline_week">1 εβδομάδα</string>
+    <string name="options_count">%1$d από %2$d</string>
+    <string name="option_number">Επιλογή %1$d</string>
+    <string name="remove_option">Αφαίρεση επιλογής %1$d</string>
+    <string name="options_limits">Τουλάχιστον %1$d επιλογές, έως %2$d.</string>
+    <string name="greeting_name">%1$s, %2$s</string>
+    <string name="first_poll_greeting">Γεια σας. Η πρώτη σας ψηφοφορία απέχει τρία πατήματα.</string>
+    <string name="first_poll_greeting_name">Γεια σου %1$s. Η πρώτη σου ψηφοφορία απέχει τρία πατήματα.</string>
+    <string name="tie_options">Ισοπαλία · %1$s</string>
+    <plurals name="unread_count">
+        <item quantity="one">%1$d νέα</item>
+        <item quantity="other">%1$d νέες</item>
+    </plurals>
+    <string name="share_app">Πάρτε αποφάσεις με την παρέα σας στο Pickle: %1$s</string>
+    <string name="new_suggestion">Νέα πρόταση: %1$s</string>
+    <string name="suggestion_approved">Η πρόταση εγκρίθηκε: %1$s</string>
+    <string name="suggestion_rejected">Η πρόταση απορρίφθηκε: %1$s</string>
+    <string name="relative_days">%1$d ημ.</string>
+    <string name="relative_hours">%1$d ώρ.</string>
+    <string name="relative_minutes">%1$d λεπ.</string>
+    <string name="change_to">Αλλαγή σε %1$s</string>
+    <string name="vote_for">Ψήφος για %1$s</string>
+    <string name="picked_changeable">Επιλέξατε %1$s · μπορείτε να αλλάξετε μέχρι τη λήξη</string>
+    <string name="picked">Επιλέξατε %1$s</string>
+    <string name="ahead_margin">" · προηγείται κατά %1$d"</string>
+    <string name="won_margin">" · κέρδισε με διαφορά %1$d"</string>
+    <string name="votes_in">%1$s καταχωρίστηκαν</string>
+    <string name="suggested_option">Προτάθηκε: «%1$s»</string>
+    <string name="end_leader">Το %1$s προηγείται %2$d–%3$d με %4$s</string>
+    <string name="today_time">σήμερα %1$s</string>
+    <string name="tomorrow_time">αύριο %1$s</string>
+    <string name="yesterday_time">χθες %1$s</string>
+    <string name="turnout">Ψήφισαν %1$d από %2$d</string>
+    <string name="tied_count">ισοπαλία με %1$d</string>
+    <string name="closes_at">Λήγει %1$s</string>
+    <string name="settled_at">Ολοκληρώθηκε %1$s</string>
+    <string name="option_won">Το %1$s κέρδισε με διαφορά %2$d</string>
+    <string name="option_ahead">Το %1$s προηγείται κατά %2$d</string>
+    <string name="previous_winner">Το %1$s κέρδισε την προηγούμενη φορά — προσθέστε το ξανά όποτε θέλετε</string>
+    <string name="settings_summary">%1$s · %2$s · %3$s</string>
+    <string name="suggestions_on">προτάσεις ενεργές</string>
+    <string name="suggestions_off">προτάσεις ανενεργές</string>
+    <string name="error_saved_refresh">Αποθηκεύτηκε. Δεν ήταν δυνατή η ανανέωση των δεδομένων.</string>
+    <string name="error_sign_in">Συνδεθείτε για να χρησιμοποιήσετε ζωντανές ψηφοφορίες.</string>
+    <string name="error_invalid_data">Δεν ήταν δυνατή η φόρτωση ορισμένων δεδομένων. Κάντε ανανέωση.</string>
+    <string name="error_request">Δεν ήταν δυνατή η ολοκλήρωση. Ελέγξτε τη σύνδεσή σας και δοκιμάστε ξανά.</string>
+    <plurals name="vote_count">
+        <item quantity="one">%1$d ψήφος</item>
+        <item quantity="other">%1$d ψήφοι</item>
+    </plurals>
+    <plurals name="new_votes">
+        <item quantity="one">%1$d νέα ψήφος</item>
+        <item quantity="other">%1$d νέες ψήφοι</item>
+    </plurals>
+    <plurals name="suggestions_review">
+        <item quantity="one">%1$d πρόταση για έλεγχο</item>
+        <item quantity="other">%1$d προτάσεις για έλεγχο</item>
+    </plurals>
+    <plurals name="submit_selections">
+        <item quantity="one">Υποβολή %1$d επιλογής</item>
+        <item quantity="other">Υποβολή %1$d επιλογών</item>
+    </plurals>
+    <plurals name="update_selections">
+        <item quantity="one">Ενημέρωση %1$d επιλογής</item>
+        <item quantity="other">Ενημέρωση %1$d επιλογών</item>
+    </plurals>
+    <plurals name="tie_votes">
+        <item quantity="one">Ισοπαλία με %1$d ψήφο για κάθε επιλογή</item>
+        <item quantity="other">Ισοπαλία με %1$d ψήφους για κάθε επιλογή</item>
+    </plurals>
+    <plurals name="days">
+        <item quantity="one">%1$d ημέρα</item>
+        <item quantity="other">%1$d ημέρες</item>
+    </plurals>
+    <plurals name="hours">
+        <item quantity="one">%1$d ώρ.</item>
+        <item quantity="other">%1$d ώρ.</item>
+    </plurals>
+    <plurals name="template_rounds">
+        <item quantity="one">Από %1$d ψηφοφορία · %2$d επιλογές</item>
+        <item quantity="other">Από %1$d ψηφοφορίες · %2$d επιλογές</item>
+    </plurals>
+    <string name="starter_film">Βραδιά ταινίας</string>
+    <string name="starter_pizza">Τι θα φάμε;</string>
+    <string name="starter_date">Διαλέξτε ημερομηνία</string>
+    <string name="starter_place">Πού θα βρεθούμε</string>
+    <string name="starter_game">Βραδιά παιχνιδιών</string>
+    <string name="starter_driver">Ποιος οδηγεί;</string>
+    <string name="starter_film_question">Βραδιά ταινίας: τι θα δούμε;</string>
+    <string name="starter_date_question">Ποια ημερομηνία βολεύει όλους;</string>
+    <string name="starter_place_question">Πού να βρεθούμε;</string>
+    <string name="starter_game_question">Βραδιά παιχνιδιών: τι θα παίξουμε;</string>
+    <string name="closes_tonight">Λήγει απόψε</string>
+    <string name="closes_hours">Λήγει σε %1$d ώρ.</string>
+    <string name="starter_subtitle">%1$s · %2$s</string>
+    <string name="weekly_schedule">Κάθε %1$s · %2$s</string>
+    <string name="carried_options">Επιλογές από την ψηφοφορία στις %1$s</string>
+    <string-array name="pizza_options">
+        <item>Μαργαρίτα</item>
+        <item>Πεπερόνι</item>
+        <item>Χορτοφαγική</item>
+        <item>Τέσσερα τυριά</item>
+    </string-array>
+    <string-array name="place_options">
+        <item>Στο σπίτι</item>
+        <item>Στην καφετέρια</item>
+        <item>Στο πάρκο</item>
+    </string-array>
+    <string-array name="game_options">
+        <item>Επιτραπέζια</item>
+        <item>Παιχνίδια με κάρτες</item>
+        <item>Βιντεοπαιχνίδια</item>
+        <item>Παιχνίδι γνώσεων</item>
+    </string-array>
+    <string name="voter_selection_summary">%1$s · %2$s</string>
+    <string name="notification_winner">Νικητής: %1$s</string>
+    <string name="notification_tie">Ισοπαλία: %1$s</string>
+    <string name="notification_result">%1$s · %2$s</string>
+    <plurals name="voter_count">
+        <item quantity="one">%1$d ψηφοφόρος</item>
+        <item quantity="other">%1$d ψηφοφόροι</item>
+    </plurals>
+    <plurals name="selection_count">
+        <item quantity="one">%1$d επιλογή</item>
+        <item quantity="other">%1$d επιλογές</item>
+    </plurals>
+    <plurals name="result_vote_count">
+        <item quantity="one">%1$d από %2$d ψήφο</item>
+        <item quantity="other">%1$d από %2$d ψήφους</item>
+    </plurals>
+    <plurals name="result_voter_count">
+        <item quantity="one">%1$d από %2$d ψηφοφόρο</item>
+        <item quantity="other">%1$d από %2$d ψηφοφόρους</item>
+    </plurals>
 </resources>

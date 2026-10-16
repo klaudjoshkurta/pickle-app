@@ -1,6 +1,8 @@
 package com.shkurta.pickle.ui.menu
 
+import androidx.compose.ui.res.stringResource
 import android.content.Context
+import androidx.compose.ui.res.pluralStringResource
 import android.content.Intent
 import com.shkurta.pickle.ui.components.ActionFrame
 import androidx.compose.foundation.background
@@ -136,7 +138,7 @@ private fun MenuContent(
                 }
                 Spacer(Modifier.height(4.dp))
                 Text(
-                    text = "This is how the crew sees you",
+                    text = stringResource(R.string.profile_description),
                     style = MaterialTheme.typography.labelMedium,
                     color = Pickle.colors.inkMuted,
                 )
@@ -145,51 +147,51 @@ private fun MenuContent(
 
             PickleCard(contentPadding = PaddingValues(vertical = 18.dp)) {
                 Row {
-                    Stat(value = createdCount, label = "Polls", modifier = Modifier.weight(1f))
-                    Stat(value = openCount, label = "Live", modifier = Modifier.weight(1f))
-                    Stat(value = voteCount, label = "Votes", modifier = Modifier.weight(1f))
+                    Stat(value = createdCount, label = stringResource(R.string.polls), modifier = Modifier.weight(1f))
+                    Stat(value = openCount, label = stringResource(R.string.live), modifier = Modifier.weight(1f))
+                    Stat(value = voteCount, label = stringResource(R.string.votes_label), modifier = Modifier.weight(1f))
                 }
             }
 
-            SectionLabel(text = "Polls")
+            SectionLabel(text = stringResource(R.string.polls))
             PickleCard(contentPadding = PaddingValues(0.dp)) {
                 Column {
                     MenuRow(
                         iconRes = R.drawable.ic_add,
-                        label = "New poll",
+                        label = stringResource(R.string.new_poll),
                         onClick = onCreatePollClick,
                     )
                     CardDivider()
                     MenuRow(
                         iconRes = R.drawable.ic_bell,
-                        label = "Notifications",
-                        trailing = if (unreadCount > 0) "$unreadCount new" else null,
+                        label = stringResource(R.string.notifications),
+                        trailing = if (unreadCount > 0) pluralStringResource(R.plurals.unread_count, unreadCount, unreadCount) else null,
                         highlightTrailing = true,
                         onClick = onNotificationsClick,
                     )
                 }
             }
 
-            SectionLabel(text = "About")
+            SectionLabel(text = stringResource(R.string.about))
             PickleCard(contentPadding = PaddingValues(0.dp)) {
                 Column {
                     MenuRow(
                         iconRes = R.drawable.ic_share,
-                        label = "Share Pickle",
+                        label = stringResource(R.string.share_pickle),
                         onClick = onShareAppClick,
                     )
                     if (versionName != null) {
                         CardDivider()
                         MenuRow(
                             iconRes = R.drawable.ic_check,
-                            label = "Version",
+                            label = stringResource(R.string.version),
                             trailing = versionName,
                         )
                     }
                     CardDivider()
                     MenuRow(
                         iconRes = R.drawable.ic_close,
-                        label = "Sign out",
+                        label = stringResource(R.string.sign_out),
                         onClick = onSignOut,
                     )
                 }
@@ -207,7 +209,7 @@ private fun MenuTopBar(
         modifier = modifier.padding(horizontal = 8.dp),
         title = {
             Text(
-                text = "Account",
+                text = stringResource(R.string.account),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(start = 8.dp),
             )
@@ -215,7 +217,7 @@ private fun MenuTopBar(
         navigationIcon = {
             CircleIconButton(
                 iconRes = R.drawable.ic_arrow_back,
-                contentDescription = "Back",
+                contentDescription = stringResource(R.string.back),
                 onClick = onBack,
             )
         },
@@ -327,7 +329,7 @@ private fun MenuRow(
 private fun shareApp(context: Context) {
     val intent = Intent(Intent.ACTION_SEND).apply {
         type = "text/plain"
-        putExtra(Intent.EXTRA_TEXT, "Make group decisions with Pickle: https://pickle-web-iota.vercel.app")
+        putExtra(Intent.EXTRA_TEXT, context.getString(com.shkurta.pickle.R.string.share_app, com.shkurta.pickle.ui.components.WEB_BASE_URL))
     }
     context.startActivity(Intent.createChooser(intent, null))
 }

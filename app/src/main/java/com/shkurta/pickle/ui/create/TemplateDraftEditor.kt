@@ -1,5 +1,7 @@
 package com.shkurta.pickle.ui.create
 
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectDragGesturesAfterLongPress
 import androidx.compose.foundation.layout.*
@@ -41,18 +43,20 @@ fun TemplateDraftEditor(
 ) {
     var showSettings by rememberSaveable { mutableStateOf(false) }
     val c=Pickle.colors
+    val moveUp = stringResource(R.string.move_option_up)
+    val moveDown = stringResource(R.string.move_option_down)
     Scaffold(containerColor=c.canvas,topBar={
-        CenterAlignedTopAppBar(title={Text("New poll",style=MaterialTheme.typography.titleSmall,fontWeight=FontWeight.Bold)},
-            navigationIcon={TextButton(onClick=onBack){Text("Cancel",color=c.tomatoDeep,fontWeight=FontWeight.Bold)}},
-            actions={Text("From template",style=MaterialTheme.typography.labelLarge,color=c.inkMuted,modifier=Modifier.padding(end=20.dp))},
+        CenterAlignedTopAppBar(title={Text(stringResource(R.string.new_poll),style=MaterialTheme.typography.titleSmall,fontWeight=FontWeight.Bold)},
+            navigationIcon={TextButton(onClick=onBack){Text(stringResource(R.string.cancel),color=c.tomatoDeep,fontWeight=FontWeight.Bold)}},
+            actions={Text(stringResource(R.string.from_template),style=MaterialTheme.typography.labelLarge,color=c.inkMuted,modifier=Modifier.padding(end=20.dp))},
             colors=TopAppBarDefaults.topAppBarColors(containerColor=c.canvas))
-    },bottomBar={PickleButton("Create & get the link",onCreate,Modifier.fillMaxWidth().navigationBarsPadding().imePadding().padding(horizontal=20.dp,vertical=16.dp),
+    },bottomBar={PickleButton(stringResource(R.string.create_link),onCreate,Modifier.fillMaxWidth().navigationBarsPadding().imePadding().padding(horizontal=20.dp,vertical=16.dp),
         style=PickleButtonStyle.Teal,enabled=state.isValid)}) { padding ->
         Column(Modifier.fillMaxSize().padding(padding).verticalScroll(rememberScrollState()).padding(horizontal=20.dp),verticalArrangement=Arrangement.spacedBy(14.dp)) {
             PickleCard(color=c.mustard,contentPadding=PaddingValues(horizontal=14.dp,vertical=12.dp)) {
                 Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
                     Text("↻",style=MaterialTheme.typography.headlineSmall)
-                    Text("${state.title}${state.history?.let { " — $it" }.orEmpty()}",style=MaterialTheme.typography.bodySmall.copy(fontSize=11.sp))
+                    Text("${state.title}${state.history?.let { " — " + carriedOptionsLabel(it) }.orEmpty()}",style=MaterialTheme.typography.bodySmall.copy(fontSize=11.sp))
                 }
             }
             PickleCard {
@@ -80,36 +84,36 @@ fun TemplateDraftEditor(
                                 })
                             }.semantics {
                                 customActions=listOf(
-                                    CustomAccessibilityAction("Move option up"){if(index>0){onMove(index,index-1);true}else false},
-                                    CustomAccessibilityAction("Move option down"){if(index<state.options.lastIndex){onMove(index,index+1);true}else false})
+                                    CustomAccessibilityAction(moveUp){if(index>0){onMove(index,index-1);true}else false},
+                                    CustomAccessibilityAction(moveDown){if(index<state.options.lastIndex){onMove(index,index+1);true}else false})
                             }) {
                                 Canvas(Modifier.size(12.dp,20.dp)) {
                                     for(x in listOf(.3f,.7f)) for(y in listOf(.3f,.5f,.7f)) drawCircle(c.inkMuted,1.3.dp.toPx(),Offset(size.width*x,size.height*y))
                                 }
                             }
                             DropdownMenu(orderMenu,{orderMenu=false}) {
-                                DropdownMenuItem(text={Text("Move up")},enabled=index>0,onClick={onMove(index,index-1);orderMenu=false})
-                                DropdownMenuItem(text={Text("Move down")},enabled=index<state.options.lastIndex,onClick={onMove(index,index+1);orderMenu=false})
+                                DropdownMenuItem(text={Text(stringResource(R.string.move_up))},enabled=index>0,onClick={onMove(index,index-1);orderMenu=false})
+                                DropdownMenuItem(text={Text(stringResource(R.string.move_down))},enabled=index<state.options.lastIndex,onClick={onMove(index,index+1);orderMenu=false})
                             }
                         }
-                        PickleTextField(text,{onOption(index,it)},modifier=Modifier.weight(1f),placeholder=if(state.icon=="driver") "Driver’s name" else "Option ${index+1}",
+                        PickleTextField(text,{onOption(index,it)},modifier=Modifier.weight(1f),placeholder=if(state.icon=="driver") stringResource(R.string.driver_name) else stringResource(R.string.option_number, index+1),
                             trailing=when {
-                                text in state.runnerUpTexts -> {{InfoPill("Runner-up last time",container=c.sunken,content=c.inkMuted,borderColor=null)}}
-                                text in state.newTexts || optionKey in state.newKeys -> {{InfoPill("New",container=c.tealSoft,content=c.teal,borderColor=null)}}
+                                text in state.runnerUpTexts -> {{InfoPill(stringResource(R.string.runner_up),container=c.sunken,content=c.inkMuted,borderColor=null)}}
+                                text in state.newTexts || optionKey in state.newKeys -> {{InfoPill(stringResource(R.string.new_label),container=c.tealSoft,content=c.teal,borderColor=null)}}
                                 else -> null
                             })
                         IconButton(onClick={onRemove(index)},enabled=state.options.size>MIN_POLL_OPTIONS,modifier=Modifier.size(26.dp)) {
-                            Icon(painterResource(R.drawable.ic_close),"Remove option ${index+1}",tint=c.inkMuted,modifier=Modifier.size(18.dp))
+                            Icon(painterResource(R.drawable.ic_close),stringResource(R.string.remove_option, index+1),tint=c.inkMuted,modifier=Modifier.size(18.dp))
                         }
                     }
                 }
             }
-            if(state.options.size<MAX_POLL_OPTIONS) TextButton(onClick=onAdd) {Text("+ Add an option",color=c.textAccent)}
+            if(state.options.size<MAX_POLL_OPTIONS) TextButton(onClick=onAdd) {Text(stringResource(R.string.add_option_plus),color=c.textAccent)}
             state.winnerText?.let { winner ->
                 Row(verticalAlignment=Alignment.CenterVertically,horizontalArrangement=Arrangement.spacedBy(12.dp)) {
                     Column(Modifier.weight(1f)) {
-                        Text("Leave out last time’s winner",fontWeight=FontWeight.Bold)
-                        Text("$winner won last time — add it back any time",style=MaterialTheme.typography.bodySmall,color=c.inkMuted)
+                        Text(stringResource(R.string.exclude_winner),fontWeight=FontWeight.Bold)
+                        Text(stringResource(R.string.previous_winner, winner),style=MaterialTheme.typography.bodySmall,color=c.inkMuted)
                     }
                     Switch(checked=state.excludeWinner,onCheckedChange=onExclude,colors=pickleSwitchColors(),enabled=state.excludeWinner || state.options.size<MAX_POLL_OPTIONS)
                 }
@@ -121,17 +125,18 @@ fun TemplateDraftEditor(
                     Text("✎",color=c.tomatoDeep)
                 }
             }
-            if(!state.isValid) Text("Use 2–10 distinct, nonblank options to create your poll.",style=MaterialTheme.typography.bodySmall,color=c.inkMuted)
+            if(!state.isValid) Text(stringResource(R.string.options_validation),style=MaterialTheme.typography.bodySmall,color=c.inkMuted)
             Spacer(Modifier.height(20.dp))
         }
     }
     if(showSettings) DraftSettingsSheet(state,{showSettings=false},onSettings,onDeadline,onExpectedVoters)
 }
 
+@Composable
 fun draftSettingsSummary(state:CreatePollUiState):String {
-    val closes=state.customClosesAt?.let {parseDatabaseInstant(it).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("EEE h:mm a"))}
-    val time=closes?.let {"Closes $it"}?:state.deadline.label
-    return "$time · ${if(state.settings.votingMode==VotingMode.SINGLE) "single choice" else "multi-choice"} · suggestions ${if(state.settings.allowSuggestions) "on" else "off"}"
+    val closes=state.customClosesAt?.let { com.shkurta.pickle.ui.components.localizedDateTime(parseDatabaseInstant(it)) }
+    val time=closes?.let {stringResource(R.string.closes_at, it)}?:stringResource(state.deadline.label)
+    return stringResource(R.string.settings_summary, time, stringResource(if(state.settings.votingMode==VotingMode.SINGLE) R.string.single_choice else R.string.multi_choice), stringResource(if(state.settings.allowSuggestions) R.string.suggestions_on else R.string.suggestions_off))
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -147,35 +152,35 @@ fun DraftSettingsSheet(state:CreatePollUiState,onDismiss:()->Unit,onSettings:(Po
     val timePicker=rememberTimePickerState(current.hour,current.minute)
     ModalBottomSheet(onDismissRequest=onDismiss,containerColor=Pickle.colors.surface) {
         Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal=20.dp),verticalArrangement=Arrangement.spacedBy(14.dp)) {
-            Text("Poll settings",style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold)
-            SegmentedToggle(VotingMode.entries,state.settings.votingMode,{onSettings(state.settings.copy(votingMode=it))},{if(it==VotingMode.SINGLE) "Single choice" else "Multi-choice"})
-            Text("Closing time",fontWeight=FontWeight.Bold)
+            Text(stringResource(R.string.poll_settings),style=MaterialTheme.typography.titleLarge,fontWeight=FontWeight.Bold)
+            SegmentedToggle(VotingMode.entries,state.settings.votingMode,{onSettings(state.settings.copy(votingMode=it))},{if(it==VotingMode.SINGLE) stringResource(R.string.single_choice) else stringResource(R.string.multi_choice)})
+            Text(stringResource(R.string.closing_time),fontWeight=FontWeight.Bold)
             listOf(listOf(1L,3L,24L),listOf(48L,72L,168L)).forEach { hours ->
                 Row(horizontalArrangement=Arrangement.spacedBy(6.dp)) {
-                    hours.forEach {hour -> AssistChip(onClick={onDeadline(Instant.now().plusSeconds(hour*3600))},label={Text(if(hour>=24) "${hour/24} days" else "$hour h")})}
+                    hours.forEach {hour -> AssistChip(onClick={onDeadline(Instant.now().plusSeconds(hour*3600))},label={Text(if(hour>=24) pluralStringResource(R.plurals.days, (hour/24).toInt(), hour/24) else pluralStringResource(R.plurals.hours, hour.toInt(), hour))})}
                 }
             }
-            Row {TextButton(onClick={showDate=true}){Text("Choose date & time")};TextButton(onClick={onDeadline(null)}){Text("No deadline")}}
+            Row {TextButton(onClick={showDate=true}){Text(stringResource(R.string.choose_datetime))};TextButton(onClick={onDeadline(null)}){Text(stringResource(R.string.no_deadline))}}
             Text(draftSettingsSummary(state),style=MaterialTheme.typography.bodySmall,color=Pickle.colors.inkMuted)
-            SettingSwitch("Allow suggestions",state.settings.allowSuggestions){onSettings(state.settings.copy(allowSuggestions=it))}
-            SettingSwitch("Approve suggestions first",state.settings.requireApproval){onSettings(state.settings.copy(requireApproval=it))}
-            SettingSwitch("Show results before voting",state.settings.showResultsBeforeVoting){onSettings(state.settings.copy(showResultsBeforeVoting=it))}
-            SettingSwitch("Allow vote changes",state.settings.allowVoteChange){onSettings(state.settings.copy(allowVoteChange=it))}
-            PickleTextField(state.expectedVoters,onExpected,placeholder="Expected voters (optional)",keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number))
-            PickleButton("Done",onDismiss,Modifier.fillMaxWidth(),style=PickleButtonStyle.Teal)
+            SettingSwitch(stringResource(R.string.allow_suggestions),state.settings.allowSuggestions){onSettings(state.settings.copy(allowSuggestions=it))}
+            SettingSwitch(stringResource(R.string.approve_suggestions),state.settings.requireApproval){onSettings(state.settings.copy(requireApproval=it))}
+            SettingSwitch(stringResource(R.string.show_results),state.settings.showResultsBeforeVoting){onSettings(state.settings.copy(showResultsBeforeVoting=it))}
+            SettingSwitch(stringResource(R.string.allow_vote_changes),state.settings.allowVoteChange){onSettings(state.settings.copy(allowVoteChange=it))}
+            PickleTextField(state.expectedVoters,onExpected,placeholder=stringResource(R.string.expected_voters_optional),keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number))
+            PickleButton(stringResource(R.string.done),onDismiss,Modifier.fillMaxWidth(),style=PickleButtonStyle.Teal)
             Spacer(Modifier.height(20.dp))
         }
     }
     if(showDate) DatePickerDialog(onDismissRequest={showDate=false},confirmButton={TextButton(onClick={
         datePicker.selectedDateMillis?.let {selectedDate=Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate();showDate=false;showTime=true}
-    }){Text("Next")}},dismissButton={TextButton(onClick={showDate=false}){Text("Cancel")}}) {DatePicker(datePicker)}
-    if(showTime) AlertDialog(onDismissRequest={showTime=false},title={Text("Closing time")},text={Column {
+    }){Text(stringResource(R.string.next))}},dismissButton={TextButton(onClick={showDate=false}){Text(stringResource(R.string.cancel))}}) {DatePicker(datePicker)}
+    if(showTime) AlertDialog(onDismissRequest={showTime=false},title={Text(stringResource(R.string.closing_time))},text={Column {
         TimePicker(timePicker)
-        if(dateError) Text("Choose a time in the future.",color=MaterialTheme.colorScheme.error)
+        if(dateError) Text(stringResource(R.string.future_time_error),color=MaterialTheme.colorScheme.error)
     }},confirmButton={TextButton(onClick={
         val instant=selectedDate.atTime(timePicker.hour,timePicker.minute).atZone(zone).toInstant()
         if(instant>Instant.now()){onDeadline(instant);showTime=false;dateError=false}else dateError=true
-    }){Text("Set time")}},dismissButton={TextButton(onClick={showTime=false}){Text("Cancel")}})
+    }){Text(stringResource(R.string.set_time))}},dismissButton={TextButton(onClick={showTime=false}){Text(stringResource(R.string.cancel))}})
 }
 
 @Composable

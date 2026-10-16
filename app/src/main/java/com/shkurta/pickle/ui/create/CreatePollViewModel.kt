@@ -19,8 +19,8 @@ import java.util.UUID
 import javax.inject.Inject
 
 const val MAX_POLL_OPTIONS=10
-enum class Deadline(val label:String,val hours:Long?) {
-    NONE("No deadline",null), ONE_HOUR("In 1 hour",1), ONE_DAY("1 day",24), THREE_DAYS("3 days",72), ONE_WEEK("1 week",168),
+enum class Deadline(val label:Int,val hours:Long?) {
+    NONE(com.shkurta.pickle.R.string.no_deadline,null), ONE_HOUR(com.shkurta.pickle.R.string.deadline_hour,1), ONE_DAY(com.shkurta.pickle.R.string.deadline_day,24), THREE_DAYS(com.shkurta.pickle.R.string.deadline_three_days,72), ONE_WEEK(com.shkurta.pickle.R.string.deadline_week,168),
 }
 
 data class CreatePollUiState(
@@ -44,6 +44,7 @@ class CreatePollViewModel @Inject constructor(
     private val refreshNotifications:RefreshNotificationsUseCase,
     private val templates:TemplateRepository,
     private val polls:PollRepository,
+    private val starterLocalization:com.shkurta.pickle.ui.components.StarterLocalization,
 ):ViewModel() {
     private val actions=ActionRunner(viewModelScope)
     val actionState=actions.state
@@ -75,7 +76,7 @@ class CreatePollViewModel @Inject constructor(
             val starterId=savedStateHandle.get<String>("starterId")
             val templateId=savedStateHandle.get<String>("templateId")
             if(starterId!=null || templateId!=null) actions.run {
-                val seed=if(starterId!=null) PollStarter.entries.first { it.id==starterId }.seed() else {
+                val seed=if(starterId!=null) starterLocalization.seed(PollStarter.entries.first { it.id==starterId }) else {
                     templates.refresh(); polls.refresh()
                     templates.templates.value.first { it.id==templateId }.seed(polls.polls.value)
                 }

@@ -1,5 +1,6 @@
 package com.shkurta.pickle.ui.components
 
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -286,8 +287,8 @@ fun SectionLabel(
 fun StatusPill(
     isOpen: Boolean,
     modifier: Modifier = Modifier,
-    openLabel: String = "Voting open",
-    closedLabel: String = "Voting closed",
+    openLabel: String = stringResource(R.string.voting_open),
+    closedLabel: String = stringResource(R.string.voting_closed),
 ) {
     val c = Pickle.colors
     Row(
@@ -381,7 +382,7 @@ fun PickleBrand(
             )
         }
         Text(
-            text = "pickle",
+            text = stringResource(R.string.app_wordmark),
             style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
             color = c.ink,
@@ -476,16 +477,16 @@ private fun PickleComponentsPreview() {
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             PickleBrand()
-            PickleHeadline("Can't decide?")
+            PickleHeadline(stringResource(R.string.onboarding_tagline))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 StatusPill(isOpen = true)
                 StatusPill(isOpen = false)
             }
-            PickleButton("Primary", {}, Modifier.fillMaxWidth())
-            PickleButton("Teal", {}, Modifier.fillMaxWidth(), style = PickleButtonStyle.Teal)
-            PickleButton("Tomato", {}, Modifier.fillMaxWidth(), style = PickleButtonStyle.Tomato)
-            PickleButton("Outline", {}, Modifier.fillMaxWidth(), style = PickleButtonStyle.Outline)
-            DashedActionButton("Add an option", {})
+            PickleButton(stringResource(R.string.create_link), {}, Modifier.fillMaxWidth())
+            PickleButton(stringResource(R.string.create_link), {}, Modifier.fillMaxWidth(), style = PickleButtonStyle.Teal)
+            PickleButton(stringResource(R.string.create_link), {}, Modifier.fillMaxWidth(), style = PickleButtonStyle.Tomato)
+            PickleButton(stringResource(R.string.create_link), {}, Modifier.fillMaxWidth(), style = PickleButtonStyle.Outline)
+            DashedActionButton(stringResource(R.string.add_option), {})
             BlockMeter(5, 11, Pickle.colors.mustard, Pickle.colors.sunken)
         }
     }

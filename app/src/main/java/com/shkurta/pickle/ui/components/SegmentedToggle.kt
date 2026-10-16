@@ -1,5 +1,7 @@
 package com.shkurta.pickle.ui.components
 
+import com.shkurta.pickle.R
+import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -36,7 +38,7 @@ fun <T> SegmentedToggle(
     options: List<T>,
     selected: T,
     onSelect: (T) -> Unit,
-    label: (T) -> String,
+    label: @Composable (T) -> String,
     modifier: Modifier = Modifier,
 ) {
     val selectedIndex = options.indexOf(selected).coerceAtLeast(0)
@@ -99,7 +101,7 @@ fun <T> SegmentedToggle(
 @Composable
 private fun SegmentedTogglePreview() {
     PickleTheme {
-        val options = listOf("My polls", "Closed")
+        val options = listOf(stringResource(R.string.my_polls), stringResource(R.string.closed))
         var selected by remember { mutableStateOf(options.first()) }
 
         SegmentedToggle(

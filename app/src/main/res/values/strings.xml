@@ -48,4 +48,287 @@
     <string name="auth_register_failed">Couldn’t create your account. Check your connection and account details, then try again.</string>
     <string name="auth_success">Details accepted. If email confirmation is required, check your inbox before logging in.</string>
     <string name="auth_login_success">You’re logged in. Opening your polls…</string>
+    <string name="new_poll">New poll</string>
+    <string name="cancel">Cancel</string>
+    <string name="from_template">From template</string>
+    <string name="create_link">Create &amp; get the link</string>
+    <string name="move_up">Move up</string>
+    <string name="move_down">Move down</string>
+    <string name="move_option_up">Move option up</string>
+    <string name="move_option_down">Move option down</string>
+    <string name="driver_name">Driver’s name</string>
+    <string name="runner_up">Runner-up last time</string>
+    <string name="new_label">New</string>
+    <string name="add_option">Add an option</string>
+    <string name="add_option_plus">+ Add an option</string>
+    <string name="exclude_winner">Leave out last time’s winner</string>
+    <string name="options_validation">Use 2–10 distinct, nonblank options to create your poll.</string>
+    <string name="poll_settings">Poll settings</string>
+    <string name="single_choice">Single choice</string>
+    <string name="multi_choice">Multi-choice</string>
+    <string name="closing_time">Closing time</string>
+    <string name="choose_datetime">Choose date &amp; time</string>
+    <string name="no_deadline">No deadline</string>
+    <string name="allow_suggestions">Allow suggestions</string>
+    <string name="approve_suggestions">Approve suggestions first</string>
+    <string name="show_results">Show results before voting</string>
+    <string name="allow_vote_changes">Allow vote changes</string>
+    <string name="expected_voters_optional">Expected voters (optional)</string>
+    <string name="done">Done</string>
+    <string name="next">Next</string>
+    <string name="future_time_error">Choose a time in the future.</string>
+    <string name="set_time">Set time</string>
+    <string name="deciding_question">What are we deciding?</string>
+    <string name="pizza_question">Pizza night: what are we ordering?</string>
+    <string name="options">Options</string>
+    <string name="when_close">When does voting close?</string>
+    <string name="how_vote">How do people vote?</string>
+    <string name="voters_suggest">Voters can suggest options</string>
+    <string name="suggest_description">Let the crew add ideas</string>
+    <string name="approval_description">You approve each one before it joins</string>
+    <string name="results_description">Off = results only after you vote, no bandwagons</string>
+    <string name="allow_changing_vote">Allow changing vote</string>
+    <string name="change_vote_description">Voters can switch while the poll is open</string>
+    <string name="expected_voters">Expected voters</string>
+    <string name="turnout_description">Optional, shows turnout on the poll</string>
+    <string name="start_first_poll">Start your first poll</string>
+    <string name="polls_load_error">Your polls couldn’t be loaded. Use Retry below.</string>
+    <string name="offline_home">Offline demo · Sign in to use live polls</string>
+    <string name="start_template">Start from a template</string>
+    <string name="blank_poll">Blank poll</string>
+    <string name="polls_live_here">Your polls will live here</string>
+    <string name="live_float">Live ones float to the top with a pulse.</string>
+    <string name="live_now">Live now</string>
+    <string name="settled">Settled</string>
+    <string name="no_live_polls">No live polls right now. Start a new one or use a template.</string>
+    <string name="no_settled_polls">Nothing settled yet. Closed polls and their winners land here.</string>
+    <string name="ask_question">Ask the question</string>
+    <string name="question_examples">Pizza? Film? Where to meet?</string>
+    <string name="add_options_step">Add 2–10 options</string>
+    <string name="template_step">Or let a template fill them in</string>
+    <string name="share_link_step">Share the link</string>
+    <string name="friends_vote_step">Friends vote — no sign-up, no app</string>
+    <string name="pizza_night">Pizza night</string>
+    <string name="nobody_voted">Nobody voted</string>
+    <string name="morning">Morning</string>
+    <string name="afternoon">Afternoon</string>
+    <string name="evening">Evening</string>
+    <string name="your_polls">Your polls</string>
+    <string name="my_polls">My polls</string>
+    <string name="closed">Closed</string>
+    <string name="templates">Templates</string>
+    <string name="profile_description">This is how the crew sees you</string>
+    <string name="polls">Polls</string>
+    <string name="live">Live</string>
+    <string name="votes_label">Votes</string>
+    <string name="notifications">Notifications</string>
+    <string name="about">About</string>
+    <string name="share_pickle">Share Pickle</string>
+    <string name="version">Version</string>
+    <string name="sign_out">Sign out</string>
+    <string name="account">Account</string>
+    <string name="back">Back</string>
+    <string name="share">Share</string>
+    <string name="refresh">Refresh</string>
+    <string name="retry">Retry</string>
+    <string name="mark_all_read">Mark all read</string>
+    <string name="no_notifications">No notifications yet</string>
+    <string name="poll_live">Your poll is live</string>
+    <string name="poll_closed">Poll closed</string>
+    <string name="today">Today</string>
+    <string name="yesterday">Yesterday</string>
+    <string name="earlier">Earlier</string>
+    <string name="now">now</string>
+    <string name="template_intro">Same question every Friday? Start from last time.</string>
+    <string name="your_templates">Your templates</string>
+    <string name="templates_empty">Save one of your polls as a template to start a tradition.</string>
+    <string name="use_template">Use</string>
+    <string name="starters">Starters</string>
+    <string name="save_as_template">Save as template</string>
+    <string name="edit_template">Edit template</string>
+    <string name="template_name">Template name</string>
+    <string name="weekly_closing">Weekly closing time</string>
+    <string name="local_time_hint">Local time (HH:mm)</string>
+    <string name="timezone_hint">Timezone, e.g. Europe/Athens</string>
+    <string name="schedule_error">Enter a valid time and IANA timezone.</string>
+    <string name="template_private">Each use opens an editable draft. Your template is private.</string>
+    <string name="save_template">Save template</string>
+    <string name="offline_results">Offline demo · Sample results</string>
+    <string name="sign_in_live">Sign in to use live polls</string>
+    <string name="pick_option">Pick an option</string>
+    <string name="keep_vote">Keep my vote</string>
+    <string name="end_voting">End voting</string>
+    <string name="ending_description">Ending locks the count and shows everyone the result.</string>
+    <string name="youre_in">You\'re in!</string>
+    <string name="change">Change</string>
+    <string name="pick_all">Pick all that work</string>
+    <string name="pick_one">Pick one</string>
+    <string name="results_after_vote">Results show after you vote</string>
+    <string name="tied_badge">TIED</string>
+    <string name="lead_badge">IN THE LEAD</string>
+    <string name="winner_badge">WINNER</string>
+    <string name="dead_heat">Dead heat!</string>
+    <string name="crew_picked">The crew picked</string>
+    <string name="your_pick">Your pick</string>
+    <string name="anyones_game">" — still anyone\'s game"</string>
+    <string name="no_votes">No votes yet</string>
+    <string name="share_watch">Share the link and watch them land.</string>
+    <string name="suggest_option">Suggest an option</string>
+    <string name="your_idea">Your idea</string>
+    <string name="send">Send</string>
+    <string name="suggestion_sent">Your idea is with the poll creator. If it\'s added, you can switch your vote to it.</string>
+    <string name="suggestion_review">Add it and it joins with 0 votes — your call.</string>
+    <string name="add_it">Add it</string>
+    <string name="not_this_time">Not this time</string>
+    <string name="anyone_link">Anyone with the link can vote</string>
+    <string name="copied">Copied</string>
+    <string name="copy_link">Copy link</string>
+    <string name="share_ellipsis">Share…</string>
+    <string name="end_now">End voting now?</string>
+    <string name="ending_result">Ending locks the count and shows the result to everyone.</string>
+    <string name="nobody_yet">Nobody has voted yet</string>
+    <string name="end_reveal">End &amp; reveal</string>
+    <string name="keep_open">Keep it open</string>
+    <string name="poll_unavailable">Poll unavailable</string>
+    <string name="share_link">Share link</string>
+    <string name="voting_open">Voting open</string>
+    <string name="voting_closed">Voting closed</string>
+    <string name="deadline_hour">In 1 hour</string>
+    <string name="deadline_day">1 day</string>
+    <string name="deadline_three_days">3 days</string>
+    <string name="deadline_week">1 week</string>
+    <string name="options_count">%1$d of %2$d</string>
+    <string name="option_number">Option %1$d</string>
+    <string name="remove_option">Remove option %1$d</string>
+    <string name="options_limits">Need at least %1$d, up to %2$d.</string>
+    <string name="greeting_name">%1$s, %2$s</string>
+    <string name="first_poll_greeting">Hi there. Your first poll is three taps away.</string>
+    <string name="first_poll_greeting_name">Hi %1$s. Your first poll is three taps away.</string>
+    <string name="tie_options">Tie · %1$s</string>
+    <plurals name="unread_count">
+        <item quantity="one">%1$d new</item>
+        <item quantity="other">%1$d new</item>
+    </plurals>
+    <string name="share_app">Make group decisions with Pickle: %1$s</string>
+    <string name="new_suggestion">New suggestion: %1$s</string>
+    <string name="suggestion_approved">Suggestion approved: %1$s</string>
+    <string name="suggestion_rejected">Suggestion rejected: %1$s</string>
+    <string name="relative_days">%1$d d</string>
+    <string name="relative_hours">%1$d h</string>
+    <string name="relative_minutes">%1$d m</string>
+    <string name="change_to">Change to %1$s</string>
+    <string name="vote_for">Vote for %1$s</string>
+    <string name="picked_changeable">You picked %1$s · you can change it until it closes</string>
+    <string name="picked">You picked %1$s</string>
+    <string name="ahead_margin">" · ahead by %1$d"</string>
+    <string name="won_margin">" · won by %1$d"</string>
+    <string name="votes_in">%1$s in</string>
+    <string name="suggested_option">Suggested: “%1$s”</string>
+    <string name="end_leader">%1$s is ahead %2$d–%3$d with %4$s</string>
+    <string name="today_time">today %1$s</string>
+    <string name="tomorrow_time">tomorrow %1$s</string>
+    <string name="yesterday_time">yesterday %1$s</string>
+    <string name="turnout">%1$d of %2$d voted</string>
+    <string name="tied_count">tied at %1$d</string>
+    <string name="closes_at">Closes %1$s</string>
+    <string name="settled_at">Settled %1$s</string>
+    <string name="option_won">%1$s won by %2$d</string>
+    <string name="option_ahead">%1$s ahead by %2$d</string>
+    <string name="previous_winner">%1$s won last time — add it back any time</string>
+    <string name="settings_summary">%1$s · %2$s · %3$s</string>
+    <string name="suggestions_on">suggestions on</string>
+    <string name="suggestions_off">suggestions off</string>
+    <string name="error_saved_refresh">Saved. Couldn\'t refresh the latest data.</string>
+    <string name="error_sign_in">Sign in to use live polls.</string>
+    <string name="error_invalid_data">Some data couldn\'t be loaded. Please refresh.</string>
+    <string name="error_request">Couldn\'t complete this request. Check your connection and try again.</string>
+    <plurals name="vote_count">
+        <item quantity="one">%1$d vote</item>
+        <item quantity="other">%1$d votes</item>
+    </plurals>
+    <plurals name="new_votes">
+        <item quantity="one">%1$d new vote</item>
+        <item quantity="other">%1$d new votes</item>
+    </plurals>
+    <plurals name="suggestions_review">
+        <item quantity="one">%1$d suggestion to review</item>
+        <item quantity="other">%1$d suggestions to review</item>
+    </plurals>
+    <plurals name="submit_selections">
+        <item quantity="one">Submit %1$d selection</item>
+        <item quantity="other">Submit %1$d selections</item>
+    </plurals>
+    <plurals name="update_selections">
+        <item quantity="one">Update %1$d selection</item>
+        <item quantity="other">Update %1$d selections</item>
+    </plurals>
+    <plurals name="tie_votes">
+        <item quantity="one">It’s a tie at %1$d vote each</item>
+        <item quantity="other">It’s a tie at %1$d votes each</item>
+    </plurals>
+    <plurals name="days">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+    <plurals name="hours">
+        <item quantity="one">%1$d h</item>
+        <item quantity="other">%1$d h</item>
+    </plurals>
+    <plurals name="template_rounds">
+        <item quantity="one">Saved from %1$d poll · %2$d options</item>
+        <item quantity="other">Saved from %1$d polls · %2$d options</item>
+    </plurals>
+    <string name="starter_film">Film night</string>
+    <string name="starter_pizza">What are we eating?</string>
+    <string name="starter_date">Pick a date</string>
+    <string name="starter_place">Where to meet</string>
+    <string name="starter_game">Game night</string>
+    <string name="starter_driver">Who’s driving?</string>
+    <string name="starter_film_question">Film night: what are we watching?</string>
+    <string name="starter_date_question">Which date works for everyone?</string>
+    <string name="starter_place_question">Where should we meet?</string>
+    <string name="starter_game_question">Game night: what are we playing?</string>
+    <string name="closes_tonight">Closes tonight</string>
+    <string name="closes_hours">Closes in %1$d h</string>
+    <string name="starter_subtitle">%1$s · %2$s</string>
+    <string name="weekly_schedule">Every %1$s · %2$s</string>
+    <string name="carried_options">Options carried over from %1$s</string>
+    <string-array name="pizza_options">
+        <item>Margherita</item>
+        <item>Pepperoni</item>
+        <item>Vegetarian</item>
+        <item>Four cheese</item>
+    </string-array>
+    <string-array name="place_options">
+        <item>At home</item>
+        <item>Local café</item>
+        <item>The park</item>
+    </string-array>
+    <string-array name="game_options">
+        <item>Board games</item>
+        <item>Card games</item>
+        <item>Video games</item>
+        <item>Trivia</item>
+    </string-array>
+    <string name="voter_selection_summary">%1$s · %2$s</string>
+    <string name="notification_winner">Winner: %1$s</string>
+    <string name="notification_tie">Tie: %1$s</string>
+    <string name="notification_result">%1$s · %2$s</string>
+    <plurals name="voter_count">
+        <item quantity="one">%1$d voter</item>
+        <item quantity="other">%1$d voters</item>
+    </plurals>
+    <plurals name="selection_count">
+        <item quantity="one">%1$d selection</item>
+        <item quantity="other">%1$d selections</item>
+    </plurals>
+    <plurals name="result_vote_count">
+        <item quantity="one">%1$d of %2$d vote</item>
+        <item quantity="other">%1$d of %2$d votes</item>
+    </plurals>
+    <plurals name="result_voter_count">
+        <item quantity="one">%1$d of %2$d voter</item>
+        <item quantity="other">%1$d of %2$d voters</item>
+    </plurals>
+    <string name="app_wordmark" translatable="false">pickle</string>
 </resources>

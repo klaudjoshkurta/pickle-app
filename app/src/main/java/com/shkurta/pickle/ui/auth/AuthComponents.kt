@@ -135,12 +135,13 @@ internal fun AvatarGrid(seeds: List<String>, selectedSeed: String?, enabled: Boo
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 row.forEachIndexed { columnIndex, seed ->
                     val selected = seed == selectedSeed
+                    val description = stringResource(R.string.sign_up_avatar_cd, rowIndex * 4 + columnIndex + 1)
                     Box(Modifier.weight(1f).aspectRatio(1f).clip(CircleShape)
                         .background(Pickle.colors.surface)
                         .border(if (selected) 3.dp else PickleBorderWidth,
                             if (selected) Pickle.colors.teal else Pickle.colors.lineSoft, CircleShape)
                         .selectable(selected, enabled = enabled, role = Role.RadioButton, onClick = { onSelect(seed) })
-                        .semantics { contentDescription = context.getString(R.string.sign_up_avatar_cd, rowIndex * 4 + columnIndex + 1) },
+                        .semantics { contentDescription = description },
                         contentAlignment = Alignment.Center) {
                         AsyncImage(model = remember(seed) { ImageRequest.Builder(context).data(DiceBear.avatarUrl(seed))
                             .decoderFactory(SvgDecoder.Factory()).build() }, contentDescription = null, modifier = Modifier.fillMaxSize())

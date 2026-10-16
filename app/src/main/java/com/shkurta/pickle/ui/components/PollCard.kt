@@ -1,5 +1,7 @@
 package com.shkurta.pickle.ui.components
 
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -63,7 +65,7 @@ fun PollCard(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            StatusPill(isOpen = isOpen, openLabel = "Live", closedLabel = "Settled")
+            StatusPill(isOpen = isOpen, openLabel = stringResource(R.string.live), closedLabel = stringResource(R.string.settled))
             val label = timeLabel(poll)
             if (label != null) {
                 Text(
@@ -112,7 +114,7 @@ fun PollCard(
         } else if (isOpen) {
             Spacer(Modifier.height(12.dp))
             PickleButton(
-                text = "Share link",
+                text = stringResource(R.string.share_link),
                 onClick = onShareClick,
                 style = PickleButtonStyle.Teal,
                 leadingIcon = R.drawable.ic_share,
@@ -121,7 +123,7 @@ fun PollCard(
         } else {
             Spacer(Modifier.height(6.dp))
             Text(
-                text = "Nobody voted",
+                text = stringResource(R.string.nobody_voted),
                 style = MaterialTheme.typography.labelMedium,
                 color = c.inkMuted,
             )
@@ -130,7 +132,7 @@ fun PollCard(
         if (showSuggestionBadge && isOpen && pending > 0) {
             Spacer(Modifier.height(10.dp))
             InfoPill(
-                text = if (pending == 1) "1 suggestion to review" else "$pending suggestions to review",
+                text = pluralStringResource(R.plurals.suggestions_review, pending, pending),
                 container = c.mustard,
                 content = c.onMustard,
             )
@@ -175,43 +177,44 @@ fun PickleColors.seriesColor(index: Int): Color = when (index) {
 }
 
 /** "Closes 7:00 PM", "Closes tomorrow 6:00 PM", "Settled Mon 6:41 PM". */
+@Composable
 internal fun timeLabel(poll: Poll, now: Instant = Instant.now()): String? {
     val closedAt = poll.closedAt ?: return null
-    val prefix = if (poll.isOpen(now)) "Closes" else "Settled"
-    return "$prefix ${friendlyTime(closedAt, now)}"
+    val time = friendlyTime(closedAt, now)
+    return stringResource(if(poll.isOpen(now)) R.string.closes_at else R.string.settled_at, time)
 }
 
+@Composable
 internal fun friendlyTime(instant: Instant, now: Instant = Instant.now()): String {
     val zone = ZoneId.systemDefault()
     val date = instant.atZone(zone)
-    val today = LocalDate.now(zone)
-    val time = date.format(DateTimeFormatter.ofPattern("h:mm a"))
+    val today = now.atZone(zone).toLocalDate()
+    val time = android.text.format.DateFormat.getTimeFormat(androidx.compose.ui.platform.LocalContext.current).format(java.util.Date.from(instant))
     return when (date.toLocalDate()) {
-        today -> "today $time"
-        today.plusDays(1) -> "tomorrow $time"
-        today.minusDays(1) -> "yesterday $time"
-        else -> "${date.format(DateTimeFormatter.ofPattern("EEE d MMM"))} $time"
+        today -> stringResource(R.string.today_time, time)
+        today.plusDays(1) -> stringResource(R.string.tomorrow_time, time)
+        today.minusDays(1) -> stringResource(R.string.yesterday_time, time)
+        else -> "${date.format(DateTimeFormatter.ofPattern("EEE d MMM", androidx.compose.ui.platform.LocalConfiguration.current.locales[0]))} $time"
     }
 }
 
 /** "11 votes · Detroit-style ahead by 2" */
+@Composable
 internal fun voteSummary(poll: Poll): String {
     val votes = poll.totalVotes
     val count = when {
-        poll.expectedVoters != null -> "$votes of ${poll.expectedVoters} voted"
-        poll.settings.votingMode == com.shkurta.pickle.domain.model.VotingMode.MULTIPLE -> "$votes voters · ${poll.totalSelections} selections"
-        votes == 0 -> "No votes yet"
-        votes == 1 -> "1 vote"
-        else -> "$votes votes"
+        poll.expectedVoters != null -> stringResource(R.string.turnout, votes, poll.expectedVoters)
+        poll.settings.votingMode == com.shkurta.pickle.domain.model.VotingMode.MULTIPLE -> voterSelectionLabel(votes, poll.totalSelections)
+        votes == 0 -> stringResource(R.string.no_votes)
+        else -> pluralStringResource(R.plurals.vote_count, votes, votes)
     }
     val results = poll.toResults()
     val lead = when (val outcome = results.outcome) {
         is Outcome.Winner -> {
             val margin = outcome.option.voteCount - (results.options.getOrNull(1)?.option?.voteCount ?: 0)
-            val verb = if (poll.status == PollStatus.CLOSED) "won" else "ahead"
-            "${outcome.option.text} $verb by $margin"
+            stringResource(if(poll.status == PollStatus.CLOSED) R.string.option_won else R.string.option_ahead, outcome.option.text, margin)
         }
-        is Outcome.Tie -> "tied at ${outcome.options.first().voteCount}"
+        is Outcome.Tie -> stringResource(R.string.tied_count, outcome.options.first().voteCount)
         Outcome.NoVotes -> null
     }
     return listOfNotNull(count, lead).joinToString(" · ")

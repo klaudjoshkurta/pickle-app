@@ -27,7 +27,7 @@ class TemplatesTest {
     private val notifications=FakeNotificationRepository()
     private val now=Instant.parse("2026-10-15T12:00:00Z")
     private fun template()=PollTemplate("template","poll","Film night","film","Film?",listOf("A","B","C"),PollSettings(),1,WeeklySchedule(5,"20:00","Europe/Athens"))
-    private fun vm(handle:SavedStateHandle)=CreatePollViewModel(handle,CreatePollUseCase(polls,auth),RefreshPollsUseCase(polls),RefreshNotificationsUseCase(notifications),templates,polls)
+    private fun vm(handle:SavedStateHandle)=CreatePollViewModel(handle,CreatePollUseCase(polls,auth),RefreshPollsUseCase(polls),RefreshNotificationsUseCase(notifications),templates,polls,com.shkurta.pickle.ui.components.StarterLocalization { it.seed() })
     private fun pollVm(handle:SavedStateHandle=SavedStateHandle(mapOf("pollId" to "poll")))=PollViewModel(handle,ObservePollUseCase(polls),ObserveMyVotesUseCase(polls),ObserveAuthenticationUseCase(auth),GetCurrentUserUseCase(auth),VoteUseCase(polls),SuggestOptionUseCase(polls,auth),ModerateOptionUseCase(polls),ClosePollUseCase(polls),templates,RefreshPollsUseCase(polls))
 
     @Test fun startersHaveRealDefaultsAndNoInventedHistory() {

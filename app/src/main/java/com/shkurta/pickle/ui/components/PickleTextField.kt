@@ -19,6 +19,8 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.ui.res.stringResource
+import com.shkurta.pickle.R
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -129,13 +131,13 @@ private fun PickleTextFieldPreview() {
             PickleTextField(
                 value = text,
                 onValueChange = { text = it },
-                placeholder = "Your name",
+                placeholder = stringResource(R.string.auth_name_label),
             )
             Spacer(Modifier.height(12.dp))
             PickleTextField(
                 value = "hello@pickle.app",
                 onValueChange = {},
-                placeholder = "Email",
+                placeholder = stringResource(R.string.email),
             )
         }
     }

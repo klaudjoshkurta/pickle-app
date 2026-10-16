@@ -58,7 +58,7 @@ fun PollTemplate.seed(polls: List<Poll>, now: Instant = Instant.now()): PollDraf
         settings = latest?.settings ?: settings,
         closesAt = schedule?.nextOccurrence(now), templateId = id,
         history = latest?.closedAt?.atZone(ZoneId.of(schedule?.timezone ?: ZoneId.systemDefault().id))
-            ?.format(DateTimeFormatter.ofPattern("EEE d MMM"))?.let { "Options carried over from $it" },
+            ?.toLocalDate()?.toString(),
         winnerText = winner,
         runnerUpTexts = if (winner == null) emptySet() else remaining.filter { it.voteCount == second }.map { it.text }.toSet(),
         newTexts = if (previousTexts == null) emptySet() else texts.filter { it.lowercase() !in previousTexts }.toSet(),

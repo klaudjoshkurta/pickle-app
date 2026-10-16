@@ -1,5 +1,7 @@
 package com.shkurta.pickle.ui.notifications
 
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import com.shkurta.pickle.ui.components.ActionFrame
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -114,7 +116,7 @@ private fun NotificationsContent(
                     val groupNotifications = grouped[group].orEmpty()
                     if (groupNotifications.isNotEmpty()) {
                         item(key = "label_${group.name}") {
-                            SectionLabel(text = group.label)
+                            SectionLabel(text = stringResource(group.label))
                         }
                         items(
                             items = groupNotifications,
@@ -143,7 +145,7 @@ private fun NotificationsTopBar(
         modifier = modifier.padding(horizontal = 8.dp),
         title = {
             Text(
-                text = "Notifications",
+                text = stringResource(R.string.notifications),
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(start = 8.dp),
             )
@@ -151,7 +153,7 @@ private fun NotificationsTopBar(
         navigationIcon = {
             CircleIconButton(
                 iconRes = R.drawable.ic_arrow_back,
-                contentDescription = "Back",
+                contentDescription = stringResource(R.string.back),
                 onClick = onBack,
             )
         },
@@ -159,7 +161,7 @@ private fun NotificationsTopBar(
             if (hasUnread) {
                 TextButton(onClick = onMarkAllRead, enabled = com.shkurta.pickle.ui.components.LocalActionsEnabled.current) {
                     Text(
-                        text = "Mark all read",
+                        text = stringResource(R.string.mark_all_read),
                         style = MaterialTheme.typography.labelLarge,
                         color = Pickle.colors.textAccent,
                     )
@@ -275,25 +277,34 @@ private fun EmptyNotifications(
         )
         Spacer(Modifier.height(12.dp))
         Text(
-            text = "No notifications yet",
+            text = stringResource(R.string.no_notifications),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
 
+@Composable
 private fun PollNotification.title(): String = when (type) {
-    NotificationType.POLL_CREATED -> "Your poll is live"
-    NotificationType.POLL_CLOSED -> "Poll closed"
-    NotificationType.NEW_VOTES -> if (detail == "1") "1 new vote" else "$detail new votes"
-    NotificationType.SUGGESTION_RECEIVED -> "New suggestion: $detail"
-    NotificationType.SUGGESTION_APPROVED -> "Suggestion approved: $detail"
-    NotificationType.SUGGESTION_REJECTED -> "Suggestion rejected: $detail"
+    NotificationType.POLL_CREATED -> stringResource(R.string.poll_live)
+    NotificationType.POLL_CLOSED -> stringResource(R.string.poll_closed)
+    NotificationType.NEW_VOTES -> pluralStringResource(R.plurals.new_votes, detail?.toIntOrNull() ?: 0, detail?.toIntOrNull() ?: 0)
+    NotificationType.SUGGESTION_RECEIVED -> stringResource(R.string.new_suggestion, detail.orEmpty())
+    NotificationType.SUGGESTION_APPROVED -> stringResource(R.string.suggestion_approved, detail.orEmpty())
+    NotificationType.SUGGESTION_REJECTED -> stringResource(R.string.suggestion_rejected, detail.orEmpty())
 }
 
+@Composable
 private fun PollNotification.body(): String =
     if (type == NotificationType.POLL_CLOSED && detail != null) {
-        "$detail · $pollQuestion"
+        // These prefixes are the stored notification format, including existing notifications.
+        val outcome = when {
+            detail == "No votes" -> stringResource(R.string.no_votes)
+            detail.startsWith("Winner: ") -> stringResource(R.string.notification_winner, detail.removePrefix("Winner: "))
+            detail.startsWith("Tie: ") -> stringResource(R.string.notification_tie, detail.removePrefix("Tie: "))
+            else -> detail
+        }
+        stringResource(R.string.notification_result, outcome, pollQuestion)
     } else {
         pollQuestion
     }
@@ -321,10 +332,10 @@ private fun NotificationType.badgeColors(): Pair<Color, Color> {
     }
 }
 
-private enum class DayGroup(val label: String) {
-    TODAY("Today"),
-    YESTERDAY("Yesterday"),
-    EARLIER("Earlier"),
+private enum class DayGroup(val label: Int) {
+    TODAY(R.string.today),
+    YESTERDAY(R.string.yesterday),
+    EARLIER(R.string.earlier),
 }
 
 private fun dayGroup(
@@ -340,13 +351,14 @@ private fun dayGroup(
     }
 }
 
+@Composable
 private fun relativeTime(instant: Instant, now: Instant = Instant.now()): String {
     val duration = Duration.between(instant, now)
     return when {
-        duration.toDays() > 0 -> "${duration.toDays()}d"
-        duration.toHours() > 0 -> "${duration.toHours()}h"
-        duration.toMinutes() > 0 -> "${duration.toMinutes()}m"
-        else -> "now"
+        duration.toDays() > 0 -> stringResource(R.string.relative_days, duration.toDays())
+        duration.toHours() > 0 -> stringResource(R.string.relative_hours, duration.toHours())
+        duration.toMinutes() > 0 -> stringResource(R.string.relative_minutes, duration.toMinutes())
+        else -> stringResource(R.string.now)
     }
 }
 

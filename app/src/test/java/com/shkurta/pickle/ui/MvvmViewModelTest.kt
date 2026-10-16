@@ -31,7 +31,7 @@ class MvvmViewModelTest {
     private val notifications = FakeNotificationRepository()
 
     private fun createViewModel(handle: SavedStateHandle = SavedStateHandle()) =
-        CreatePollViewModel(handle, CreatePollUseCase(polls, auth), RefreshPollsUseCase(polls), RefreshNotificationsUseCase(notifications), FakeTemplateRepository(), polls)
+        CreatePollViewModel(handle, CreatePollUseCase(polls, auth), RefreshPollsUseCase(polls), RefreshNotificationsUseCase(notifications), FakeTemplateRepository(), polls, com.shkurta.pickle.ui.components.StarterLocalization { it.seed() })
 
     private fun pollViewModel(handle: SavedStateHandle = SavedStateHandle(mapOf("pollId" to "poll"))) =
         PollViewModel(handle, ObservePollUseCase(polls), ObserveMyVotesUseCase(polls),

@@ -28,7 +28,7 @@ class StabilityTest {
     private val polls = FakePollRepository()
     private val notifications = FakeNotificationRepository()
     private fun create(handle: SavedStateHandle = SavedStateHandle()) = CreatePollViewModel(
-        handle, CreatePollUseCase(polls, auth), RefreshPollsUseCase(polls), RefreshNotificationsUseCase(notifications), FakeTemplateRepository(), polls,
+        handle, CreatePollUseCase(polls, auth), RefreshPollsUseCase(polls), RefreshNotificationsUseCase(notifications), FakeTemplateRepository(), polls, com.shkurta.pickle.ui.components.StarterLocalization { it.seed() },
     )
     private fun draft(vm: CreatePollViewModel) {
         vm.setQuestion("Dinner?"); vm.setOption(0, "Pizza"); vm.setOption(1, "Pasta")
@@ -62,7 +62,7 @@ class StabilityTest {
             action(vm); runCurrent()
             assertFalse(vm.actionState.value.busy)
             assertNotNull(vm.actionState.value.message)
-            assertFalse(vm.actionState.value.message!!.contains("sensitive"))
+            assertEquals(com.shkurta.pickle.R.string.error_request, vm.actionState.value.message)
             polls.failure = null
             vm.retry(); runCurrent()
             assertNull(vm.actionState.value.message)

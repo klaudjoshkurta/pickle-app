@@ -20,10 +20,10 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
-enum class HomeFilter(val label: String, val sectionLabel: String) {
-    MY_POLLS("My polls", "Live now"),
-    CLOSED("Closed", "Settled"),
-    TEMPLATES("Templates", "Templates"),
+enum class HomeFilter(val label: Int, val sectionLabel: Int) {
+    MY_POLLS(com.shkurta.pickle.R.string.my_polls, com.shkurta.pickle.R.string.live_now),
+    CLOSED(com.shkurta.pickle.R.string.closed, com.shkurta.pickle.R.string.settled),
+    TEMPLATES(com.shkurta.pickle.R.string.templates, com.shkurta.pickle.R.string.templates),
 }
 
 data class HomeUiState(

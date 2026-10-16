@@ -1,5 +1,7 @@
 package com.shkurta.pickle.ui.poll
 
+import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.res.stringResource
 import com.shkurta.pickle.ui.components.ActionFrame
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -86,6 +88,9 @@ import com.shkurta.pickle.ui.components.StatusPill
 import com.shkurta.pickle.ui.components.dashedBorder
 import com.shkurta.pickle.ui.components.pollLink
 import com.shkurta.pickle.ui.components.sharePoll
+import com.shkurta.pickle.ui.components.resultCountLabel
+import com.shkurta.pickle.ui.components.voterSelectionLabel
+import com.shkurta.pickle.ui.components.percentageLabel
 import com.shkurta.pickle.ui.components.timeLabel
 import com.shkurta.pickle.ui.components.voteSummary
 import com.shkurta.pickle.ui.theme.Pickle
@@ -117,8 +122,8 @@ fun PollScreen(
     ActionFrame(action, viewModel::retry) {
         Column {
             if (isDemo) {
-                Text("Offline demo · Sample results")
-                PickleButton(text = "Sign in to use live polls", onClick = onSignIn)
+                Text(stringResource(R.string.offline_results))
+                PickleButton(text = stringResource(R.string.sign_in_live), onClick = onSignIn)
             }
             if (poll == null || poll.options.size < com.shkurta.pickle.domain.model.MIN_POLL_OPTIONS) {
                 PollNotFound(onBack = onBack, onRefresh = viewModel::refresh)
@@ -197,10 +202,10 @@ private fun PollContent(
                 ) {
                     PickleButton(
                         text = when {
-                            selectedOptionIds.isEmpty() -> "Pick an option"
-                            multiple -> "${if(hasVoted) "Update" else "Submit"} ${selectedOptionIds.size} selections"
-                            hasVoted -> "Change to ${selectedOption?.text.orEmpty()}"
-                            else -> "Vote for ${selectedOption?.text.orEmpty()}"
+                            selectedOptionIds.isEmpty() -> stringResource(R.string.pick_option)
+                            multiple -> pluralStringResource(if(hasVoted) R.plurals.update_selections else R.plurals.submit_selections, selectedOptionIds.size, selectedOptionIds.size)
+                            hasVoted -> stringResource(R.string.change_to, selectedOption?.text.orEmpty())
+                            else -> stringResource(R.string.vote_for, selectedOption?.text.orEmpty())
                         },
                         onClick = onVote,
                         enabled = selectedOptionIds.isNotEmpty() && selectedOptionIds != myVoteOptionIds,
@@ -209,7 +214,7 @@ private fun PollContent(
                     )
                     if (isChangingVote) {
                         PickleButton(
-                            text = "Keep my vote",
+                            text = stringResource(R.string.keep_vote),
                             onClick = onKeepVote,
                             style = PickleButtonStyle.Ghost,
                             modifier = Modifier.fillMaxWidth(),
@@ -314,7 +319,7 @@ private fun PollContent(
             }
 
             if (isCreator) {
-                item(key="save_template") { PickleButton("Save as template",onSaveTemplate,style=PickleButtonStyle.Outline,modifier=Modifier.fillMaxWidth()) }
+                item(key="save_template") { PickleButton(stringResource(R.string.save_as_template),onSaveTemplate,style=PickleButtonStyle.Outline,modifier=Modifier.fillMaxWidth()) }
             }
             if (isCreator && isOpen) {
                 item(key = "link") {
@@ -323,14 +328,14 @@ private fun PollContent(
                 item(key = "end") {
                     Column {
                         PickleButton(
-                            text = "End voting",
+                            text = stringResource(R.string.end_voting),
                             onClick = { showCloseSheet = true },
                             style = PickleButtonStyle.Outline,
                             modifier = Modifier.fillMaxWidth(),
                         )
                         Spacer(Modifier.height(8.dp))
                         Text(
-                            text = "Ending locks the count and shows everyone the result.",
+                            text = stringResource(R.string.ending_description),
                             style = MaterialTheme.typography.labelSmall,
                             color = c.inkMuted,
                             textAlign = TextAlign.Center,
@@ -379,7 +384,7 @@ private fun PollTopBar(
         navigationIcon = {
             CircleIconButton(
                 iconRes = R.drawable.ic_arrow_back,
-                contentDescription = "Back",
+                contentDescription = stringResource(R.string.back),
                 onClick = onBack,
             )
         },
@@ -387,7 +392,7 @@ private fun PollTopBar(
             if (onShare != null) {
                 CircleIconButton(
                     iconRes = R.drawable.ic_share,
-                    contentDescription = "Share",
+                    contentDescription = stringResource(R.string.share),
                     onClick = onShare,
                 )
             }
@@ -439,14 +444,14 @@ private fun YoureInBanner(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(
-                    text = "You're in!",
+                    text = stringResource(R.string.youre_in),
                     style = MaterialTheme.typography.titleSmall,
                     color = c.onMustard,
                 )
                 if (optionText != null) {
                     Text(
-                        text = if (canChange) "You picked $optionText · you can change it until it closes"
-                        else "You picked $optionText",
+                        text = if (canChange) stringResource(R.string.picked_changeable, optionText)
+                        else stringResource(R.string.picked, optionText),
                         style = MaterialTheme.typography.labelSmall,
                         color = c.onMustard,
                     )
@@ -455,7 +460,7 @@ private fun YoureInBanner(
             if (canChange) {
                 Spacer(Modifier.width(12.dp))
                 PickleButton(
-                    text = "Change",
+                    text = stringResource(R.string.change),
                     onClick = onChange,
                     style = PickleButtonStyle.Outline,
                     height = 36.dp,
@@ -475,7 +480,7 @@ private fun PickOneLabel(resultsHidden: Boolean, multiple: Boolean = false) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = if(multiple) "Pick all that work" else "Pick one",
+            text = if(multiple) stringResource(R.string.pick_all) else stringResource(R.string.pick_one),
             style = MaterialTheme.typography.labelLarge,
             color = c.ink,
             modifier = Modifier.weight(1f),
@@ -489,7 +494,7 @@ private fun PickOneLabel(resultsHidden: Boolean, multiple: Boolean = false) {
             )
             Spacer(Modifier.width(4.dp))
             Text(
-                text = "Results show after you vote",
+                text = stringResource(R.string.results_after_vote),
                 style = MaterialTheme.typography.labelSmall,
                 color = c.inkMuted,
             )
@@ -566,15 +571,15 @@ private fun LeaderCard(
     val runnerUp = results.options.getOrNull(leaders.size)?.option?.voteCount ?: 0
     val margin = top.option.voteCount - runnerUp
     val ribbon = when {
-        isTie -> "TIED"
-        isOpen -> "IN THE LEAD"
-        else -> "WINNER"
+        isTie -> stringResource(R.string.tied_badge)
+        isOpen -> stringResource(R.string.lead_badge)
+        else -> stringResource(R.string.winner_badge)
     }
 
     Column {
         if (!isOpen) {
             Text(
-                text = if (isTie) "Dead heat!" else "The crew picked",
+                text = if (isTie) stringResource(R.string.dead_heat) else stringResource(R.string.crew_picked),
                 style = MaterialTheme.typography.labelLarge,
                 color = c.inkMuted,
                 modifier = Modifier.padding(start = 2.dp, top = 6.dp, bottom = 6.dp),
@@ -598,7 +603,7 @@ private fun LeaderCard(
                 if (leaders.any { it.option.id in myVoteOptionIds }) {
                     Spacer(Modifier.height(8.dp))
                     InfoPill(
-                        text = "Your pick",
+                        text = stringResource(R.string.your_pick),
                         container = c.tomatoDeep,
                         content = c.onBrand,
                         borderColor = null,
@@ -612,15 +617,15 @@ private fun LeaderCard(
                         label = "leaderPct",
                     )
                     Text(
-                        text = "${(animated * 100).toInt()}%",
+                        text = percentageLabel((animated * 100).toInt()),
                         style = MaterialTheme.typography.displayMedium,
                         color = c.onBrand,
                         modifier = Modifier.weight(1f),
                     )
                     InfoPill(
                         text = buildString {
-                            append("${top.option.voteCount} of ${results.totalVotes} ${if(results.votingMode==com.shkurta.pickle.domain.model.VotingMode.MULTIPLE) "voters" else "votes"}")
-                            if (!isTie && margin > 0) append(if (isOpen) " · ahead by $margin" else " · won by $margin")
+                            append(resultCountLabel(top.option.voteCount, results.totalVotes, results.votingMode==com.shkurta.pickle.domain.model.VotingMode.MULTIPLE))
+                            if (!isTie && margin > 0) append(if (isOpen) stringResource(R.string.ahead_margin, margin) else stringResource(R.string.won_margin, margin))
                         },
                         container = c.tomatoDeep,
                         content = c.onBrand,
@@ -690,7 +695,7 @@ private fun ResultsList(
                         )
                         if (row.option.id in myVoteOptionIds) {
                             Text(
-                                text = "Your pick",
+                                text = stringResource(R.string.your_pick),
                                 style = MaterialTheme.typography.labelSmall,
                                 color = c.teal,
                             )
@@ -698,7 +703,7 @@ private fun ResultsList(
                     }
                     Spacer(Modifier.width(8.dp))
                     Text(
-                        text = "${(row.percentage * 100).toInt()}%",
+                        text = percentageLabel((row.percentage * 100).toInt()),
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.ExtraBold,
                     )
@@ -742,21 +747,21 @@ private fun TallyLine(results: PollResults, isOpen: Boolean) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = if(results.votingMode==com.shkurta.pickle.domain.model.VotingMode.MULTIPLE) "${results.totalVotes} voters · ${results.totalSelections} selections" else voteCountLabel(results.totalVotes) + " in",
+            text = if(results.votingMode==com.shkurta.pickle.domain.model.VotingMode.MULTIPLE) voterSelectionLabel(results.totalVotes, results.totalSelections) else stringResource(R.string.votes_in, voteCountLabel(results.totalVotes)),
             style = MaterialTheme.typography.labelMedium,
             fontWeight = FontWeight.SemiBold,
             color = c.ink,
         )
         if (isOpen) {
             Text(
-                text = " — still anyone's game",
+                text = stringResource(R.string.anyones_game),
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.SemiBold,
                 color = c.textAccent,
                 modifier = Modifier.weight(1f),
             )
             InfoPill(
-                text = "Live",
+                text = stringResource(R.string.live),
                 container = c.canvas,
                 content = c.teal,
                 borderColor = null,
@@ -776,13 +781,13 @@ private fun NoVotesCard(isOpen: Boolean) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = if (isOpen) "No votes yet" else "Nobody voted",
+            text = if (isOpen) stringResource(R.string.no_votes) else stringResource(R.string.nobody_voted),
             style = MaterialTheme.typography.titleSmall,
             color = c.ink,
         )
         if (isOpen) {
             Text(
-                text = "Share the link and watch them land.",
+                text = stringResource(R.string.share_watch),
                 style = MaterialTheme.typography.bodySmall,
                 color = c.inkMuted,
             )
@@ -813,7 +818,7 @@ private fun SuggestOption(
         if (expanded) {
             PickleCard {
                 Text(
-                    text = "Suggest an option",
+                    text = stringResource(R.string.suggest_option),
                     style = MaterialTheme.typography.titleSmall,
                 )
                 Spacer(Modifier.height(10.dp))
@@ -823,7 +828,7 @@ private fun SuggestOption(
                         text = it
                         onClearStatus()
                     },
-                    placeholder = "Your idea",
+                    placeholder = stringResource(R.string.your_idea),
                     keyboardOptions = KeyboardOptions(
                         capitalization = KeyboardCapitalization.Sentences,
                         imeAction = ImeAction.Done,
@@ -833,7 +838,7 @@ private fun SuggestOption(
                 Spacer(Modifier.height(10.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     PickleButton(
-                        text = "Cancel",
+                        text = stringResource(R.string.cancel),
                         onClick = {
                             text = ""
                             expanded = false
@@ -843,7 +848,7 @@ private fun SuggestOption(
                         modifier = Modifier.weight(1f),
                     )
                     PickleButton(
-                        text = "Send",
+                        text = stringResource(R.string.send),
                         onClick = submit,
                         enabled = text.isNotBlank(),
                         style = PickleButtonStyle.Teal,
@@ -854,14 +859,14 @@ private fun SuggestOption(
             }
         } else {
             DashedActionButton(
-                text = "Suggest an option",
+                text = stringResource(R.string.suggest_option),
                 onClick = { expanded = true },
             )
         }
 
         if (sentForApproval) {
             Text(
-                text = "Your idea is with the poll creator. If it's added, you can switch your vote to it.",
+                text = stringResource(R.string.suggestion_sent),
                 style = MaterialTheme.typography.labelSmall,
                 color = c.inkMuted,
                 modifier = Modifier.padding(start = 4.dp, top = 8.dp),
@@ -886,25 +891,25 @@ private fun PendingSuggestionsCard(
                 )
             }
             Text(
-                text = "Suggested: “${option.text}”",
+                text = stringResource(R.string.suggested_option, option.text),
                 style = MaterialTheme.typography.titleSmall,
             )
             Text(
-                text = "Add it and it joins with 0 votes — your call.",
+                text = stringResource(R.string.suggestion_review),
                 style = MaterialTheme.typography.labelSmall,
                 color = c.inkMuted,
             )
             Spacer(Modifier.height(10.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 PickleButton(
-                    text = "Add it",
+                    text = stringResource(R.string.add_it),
                     onClick = { onModerate(option.id, true) },
                     style = PickleButtonStyle.Teal,
                     height = 40.dp,
                     modifier = Modifier.weight(1f),
                 )
                 PickleButton(
-                    text = "Not this time",
+                    text = stringResource(R.string.not_this_time),
                     onClick = { onModerate(option.id, false) },
                     style = PickleButtonStyle.Outline,
                     height = 40.dp,
@@ -929,7 +934,7 @@ private fun LinkCard(pollId: String, onShare: () -> Unit) {
             .padding(16.dp),
     ) {
         Text(
-            text = "Anyone with the link can vote",
+            text = stringResource(R.string.anyone_link),
             style = MaterialTheme.typography.labelSmall,
             color = c.inkMuted,
         )
@@ -945,7 +950,7 @@ private fun LinkCard(pollId: String, onShare: () -> Unit) {
             )
             Spacer(Modifier.width(12.dp))
             PickleButton(
-                text = if (copied) "Copied" else "Copy link",
+                text = if (copied) stringResource(R.string.copied) else stringResource(R.string.copy_link),
                 onClick = {
                     clipboard.setText(AnnotatedString(link))
                     copied = true
@@ -955,7 +960,7 @@ private fun LinkCard(pollId: String, onShare: () -> Unit) {
         }
         Spacer(Modifier.height(8.dp))
         PickleButton(
-            text = "Share…",
+            text = stringResource(R.string.share_ellipsis),
             onClick = onShare,
             style = PickleButtonStyle.Outline,
             leadingIcon = R.drawable.ic_share,
@@ -980,22 +985,22 @@ private fun EndVotingSheet(
             .padding(bottom = 20.dp),
     ) {
         PickleHeadline(
-            text = "End voting now?",
+            text = stringResource(R.string.end_now),
             style = MaterialTheme.typography.headlineSmall,
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            text = "Ending locks the count and shows the result to everyone.",
+            text = stringResource(R.string.ending_result),
             style = MaterialTheme.typography.bodyMedium,
             color = c.inkMuted,
         )
         val standing = when (val outcome = results.outcome) {
             is Outcome.Winner -> {
                 val runnerUp = results.options.getOrNull(1)?.option?.voteCount ?: 0
-                "${outcome.option.text} is ahead ${outcome.option.voteCount}–$runnerUp with ${voteCountLabel(results.totalVotes)}"
+                stringResource(R.string.end_leader, outcome.option.text, outcome.option.voteCount, runnerUp, voteCountLabel(results.totalVotes))
             }
-            is Outcome.Tie -> "It's a tie at ${outcome.options.first().voteCount} votes each"
-            Outcome.NoVotes -> "Nobody has voted yet"
+            is Outcome.Tie -> pluralStringResource(R.plurals.tie_votes, outcome.options.first().voteCount, outcome.options.first().voteCount)
+            Outcome.NoVotes -> stringResource(R.string.nobody_yet)
         }
         Spacer(Modifier.height(16.dp))
         PickleCard(color = c.canvas, borderColor = c.lineSoft) {
@@ -1006,14 +1011,14 @@ private fun EndVotingSheet(
         }
         Spacer(Modifier.height(20.dp))
         PickleButton(
-            text = "End & reveal",
+            text = stringResource(R.string.end_reveal),
             onClick = onEnd,
             style = PickleButtonStyle.Tomato,
             modifier = Modifier.fillMaxWidth(),
         )
         Spacer(Modifier.height(10.dp))
         PickleButton(
-            text = "Keep it open",
+            text = stringResource(R.string.keep_open),
             onClick = onKeepOpen,
             style = PickleButtonStyle.Outline,
             modifier = Modifier.fillMaxWidth(),
@@ -1043,17 +1048,18 @@ private fun PollNotFound(
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 Text(
-                    text = "Poll unavailable",
+                    text = stringResource(R.string.poll_unavailable),
                     style = MaterialTheme.typography.titleMedium,
                     color = Pickle.colors.inkMuted,
                 )
-                PickleButton(text = "Refresh", onClick = onRefresh)
+                PickleButton(text = stringResource(R.string.refresh), onClick = onRefresh)
             }
         }
     }
 }
 
-private fun voteCountLabel(count: Int): String = if (count == 1) "1 vote" else "$count votes"
+@Composable
+private fun voteCountLabel(count: Int): String = pluralStringResource(R.plurals.vote_count, count, count)
 
 @Preview(showBackground = true, backgroundColor = 0xFFF6EFE3)
 @Composable
