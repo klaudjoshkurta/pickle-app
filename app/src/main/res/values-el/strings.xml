@@ -34,4 +34,18 @@
     <string name="sign_up_email_subtitle">Με αυτό το email θα συνδέεστε στο Pickle.</string>
     <string name="sign_up_password_title">Δημιουργήστε κωδικό</string>
     <string name="sign_up_password_subtitle">Επιλέξτε κωδικό με τουλάχιστον 6 χαρακτήρες.</string>
+    <string name="auth_details_title">Στοιχεία λογαριασμού</string>
+    <string name="auth_details_subtitle">Λίγα στοιχεία και μια εικόνα για το προφίλ σας.</string>
+    <string name="auth_name_label">Το όνομά σας</string>
+    <string name="auth_name_required">Γράψτε το όνομα που ξέρει η παρέα σας.</string>
+    <string name="auth_email_placeholder">you@example.com</string>
+    <string name="auth_email_invalid">Πληκτρολογήστε μια έγκυρη διεύθυνση email.</string>
+    <string name="auth_password_required">Πληκτρολογήστε τον κωδικό σας.</string>
+    <string name="auth_password_short">Χρησιμοποιήστε τουλάχιστον 6 χαρακτήρες.</string>
+    <string name="auth_password_hint">Τουλάχιστον 6 χαρακτήρες.</string>
+    <string name="auth_avatar_required">Επιλέξτε εικόνα προφίλ για να δημιουργήσετε λογαριασμό.</string>
+    <string name="auth_login_failed">Η σύνδεση απέτυχε. Ελέγξτε τη σύνδεσή σας και τα στοιχεία σας και δοκιμάστε ξανά.</string>
+    <string name="auth_register_failed">Η δημιουργία λογαριασμού απέτυχε. Ελέγξτε τη σύνδεσή σας και τα στοιχεία σας και δοκιμάστε ξανά.</string>
+    <string name="auth_success">Τα στοιχεία έγιναν δεκτά. Αν απαιτείται επιβεβαίωση email, ελέγξτε τα εισερχόμενά σας πριν συνδεθείτε.</string>
+    <string name="auth_login_success">Συνδεθήκατε. Ανοίγουμε τις ψηφοφορίες σας…</string>
 </resources>

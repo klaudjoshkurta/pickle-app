@@ -1,33 +1,41 @@
 package com.shkurta.pickle.ui.auth
 
-enum class SignUpStep { Name, Avatar, Email, Password }
-
+enum class RegistrationStep { Details, Avatar }
+enum class AuthField { Name, Email, Password }
 sealed interface AuthStatus {
     data object Idle : AuthStatus
     data object Loading : AuthStatus
-    data class Error(val message: String) : AuthStatus
+    data object Error : AuthStatus
     data object Success : AuthStatus
 }
+internal fun validEmail(value: String): Boolean =
+    Regex("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$").matches(value.trim())
 
-data class AuthUiState(
-    val isSignUp: Boolean = false,
-    val step: SignUpStep = SignUpStep.Name,
-    val name: String = "",
-    val avatarSeeds: List<String> = emptyList(),
-    val selectedSeed: String? = null,
+data class LoginUiState(
     val email: String = "",
     val password: String = "",
+    val touched: Set<AuthField> = emptySet(),
     val status: AuthStatus = AuthStatus.Idle,
 ) {
-    val isLoading: Boolean get() = status is AuthStatus.Loading
-    val isEmailValid: Boolean get() = email.trim().contains('@')
-    val isPasswordValid: Boolean get() = password.length >= 6
-    val isStepValid: Boolean get() = when (step) {
-        SignUpStep.Name -> name.isNotBlank()
-        SignUpStep.Avatar -> selectedSeed != null
-        SignUpStep.Email -> isEmailValid
-        SignUpStep.Password -> isPasswordValid
-    }
-    val canSignIn: Boolean get() = email.isNotBlank() && password.isNotBlank()
-    val canGoBackStep: Boolean get() = isSignUp && step != SignUpStep.Name
+    val isLoading get() = status == AuthStatus.Loading
+    val emailError get() = AuthField.Email in touched && !validEmail(email)
+    val passwordError get() = AuthField.Password in touched && password.isBlank()
+    val isValid get() = validEmail(email) && password.isNotBlank()
+}
+data class RegisterUiState(
+    val step: RegistrationStep = RegistrationStep.Details,
+    val name: String = "",
+    val email: String = "",
+    val password: String = "",
+    val avatarSeeds: List<String> = emptyList(),
+    val selectedSeed: String? = null,
+    val touched: Set<AuthField> = emptySet(),
+    val avatarAttempted: Boolean = false,
+    val status: AuthStatus = AuthStatus.Idle,
+) {
+    val isLoading get() = status == AuthStatus.Loading
+    val nameError get() = AuthField.Name in touched && name.isBlank()
+    val emailError get() = AuthField.Email in touched && !validEmail(email)
+    val passwordError get() = AuthField.Password in touched && password.length < 6
+    val detailsValid get() = name.isNotBlank() && validEmail(email) && password.length >= 6
 }

@@ -28,6 +28,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.error
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -46,6 +49,9 @@ fun PickleTextField(
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     trailing: (@Composable () -> Unit)? = null,
+    label: String? = null,
+    supportingText: String? = null,
+    isError: Boolean = false,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isFocused by interactionSource.collectIsFocusedAsState()
@@ -53,50 +59,64 @@ fun PickleTextField(
     val colors = MaterialTheme.colorScheme
     val c = Pickle.colors
 
-    BasicTextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = modifier.fillMaxWidth(),
-        enabled = enabled,
-        singleLine = singleLine,
-        textStyle = MaterialTheme.typography.bodyLarge.copy(color = colors.onSurface),
-        cursorBrush = SolidColor(colors.primary),
-        keyboardOptions = keyboardOptions,
-        keyboardActions = keyboardActions,
-        visualTransformation = visualTransformation,
-        interactionSource = interactionSource,
-        decorationBox = { innerTextField ->
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 56.dp)
-                    .background(c.surface, shape)
-                    .border(
-                        width = if (isFocused) 2.dp else PickleBorderWidth,
-                        color = if (isFocused) c.teal else MaterialTheme.colorScheme.surface,
-                        shape = shape,
-                    )
-                    .padding(horizontal = 16.dp)
-                    .alpha(if (enabled) 1f else 0.6f),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Box(modifier = Modifier.weight(1f)) {
-                    if (value.isEmpty()) {
-                        Text(
-                            text = placeholder,
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = colors.onSurfaceVariant,
+    Column(modifier = Modifier.fillMaxWidth()) {
+        if (label != null) {
+            Text(label, style = MaterialTheme.typography.labelLarge, color = colors.onSurface)
+            Spacer(Modifier.height(8.dp))
+        }
+        BasicTextField(
+            value = value,
+            onValueChange = onValueChange,
+            modifier = modifier.fillMaxWidth().semantics {
+                if (label != null) contentDescription = label
+                if (isError) error(supportingText.orEmpty())
+            },
+            enabled = enabled,
+            singleLine = singleLine,
+            textStyle = MaterialTheme.typography.bodyLarge.copy(color = colors.onSurface),
+            cursorBrush = SolidColor(colors.primary),
+            keyboardOptions = keyboardOptions,
+            keyboardActions = keyboardActions,
+            visualTransformation = visualTransformation,
+            interactionSource = interactionSource,
+            decorationBox = { innerTextField ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 56.dp)
+                        .background(c.surface, shape)
+                        .border(
+                            width = if (isFocused) 2.dp else PickleBorderWidth,
+                            color = if (isError) colors.error else if (isFocused) c.teal else MaterialTheme.colorScheme.surface,
+                            shape = shape,
                         )
+                        .padding(horizontal = 16.dp)
+                        .alpha(if (enabled) 1f else 0.6f),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        if (value.isEmpty()) {
+                            Text(
+                                text = placeholder,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = colors.onSurfaceVariant,
+                            )
+                        }
+                        innerTextField()
                     }
-                    innerTextField()
+                    if (trailing != null) {
+                        Spacer(Modifier.width(8.dp))
+                        trailing()
+                    }
                 }
-                if (trailing != null) {
-                    Spacer(Modifier.width(8.dp))
-                    trailing()
-                }
-            }
-        },
-    )
+            },
+        )
+        if (supportingText != null) {
+            Spacer(Modifier.height(6.dp))
+            Text(supportingText, style = MaterialTheme.typography.bodySmall,
+                color = if (isError) colors.error else colors.onSurfaceVariant)
+        }
+    }
 }
 
 @Preview(showBackground = true, backgroundColor = 0xFFF6EFE3)

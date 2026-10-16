@@ -158,19 +158,19 @@ class StabilityTest {
     }
 
     @Test fun unexpectedAuthFailuresAreSanitizedAndDoubleSubmitIsSuppressed() = runTest {
-        val vm = AuthViewModel(SavedStateHandle(), SignInUseCase(auth), SignUpUseCase(auth), ObserveAuthenticationUseCase(auth))
+        val vm = LoginViewModel(SavedStateHandle(), SignInUseCase(auth))
         vm.setEmail("a@example.com"); vm.setPassword("secret")
         auth.failure = IOException("do not expose")
         vm.submit(); vm.submit(); runCurrent()
         assertEquals(1, auth.signInCalls)
         assertTrue(vm.uiState.value.status is AuthStatus.Error)
-        assertFalse((vm.uiState.value.status as AuthStatus.Error).message.contains("expose"))
+        assertEquals(AuthStatus.Error, vm.uiState.value.status)
     }
 
     @Test fun unknownSavedEnumsUseSafeDefaults() {
         assertEquals(Deadline.NONE, create(SavedStateHandle(mapOf("deadline" to "OLD_DEADLINE"))).uiState.value.deadline)
-        val vm = AuthViewModel(SavedStateHandle(mapOf("step" to "OLD_STEP")), SignInUseCase(auth), SignUpUseCase(auth), ObserveAuthenticationUseCase(auth))
-        assertEquals(SignUpStep.Name, vm.uiState.value.step)
+        val vm = RegisterViewModel(SavedStateHandle(mapOf("step" to "OLD_STEP")), SignUpUseCase(auth))
+        assertEquals(RegistrationStep.Details, vm.uiState.value.step)
     }
 
     @Test fun demoShowsResultsWithoutChangingPollStatusOrAllowingVotes() {

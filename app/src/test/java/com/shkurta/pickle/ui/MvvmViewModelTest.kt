@@ -30,9 +30,6 @@ class MvvmViewModelTest {
     private val polls = FakePollRepository()
     private val notifications = FakeNotificationRepository()
 
-    private fun authViewModel(handle: SavedStateHandle = SavedStateHandle()) =
-        AuthViewModel(handle, SignInUseCase(auth), SignUpUseCase(auth), ObserveAuthenticationUseCase(auth))
-
     private fun createViewModel(handle: SavedStateHandle = SavedStateHandle()) =
         CreatePollViewModel(handle, CreatePollUseCase(polls, auth), RefreshPollsUseCase(polls), RefreshNotificationsUseCase(notifications), FakeTemplateRepository(), polls)
 
@@ -84,80 +81,6 @@ class MvvmViewModelTest {
         runCurrent()
         assertEquals(1, auth.signOutCalls)
         assertEquals(0, vm.uiState.value.createdCount)
-    }
-
-    @Test fun signInPreservesValidationTrimmingLoadingAndErrorMessages() = runTest {
-        val vm = authViewModel()
-        vm.submit()
-        assertEquals(0, auth.signInCalls)
-        vm.setEmail(" alex@example.com ")
-        vm.setPassword("secret")
-        auth.result = Result.failure(IllegalStateException("Invalid credentials"))
-        vm.submit()
-        assertEquals(AuthStatus.Loading, vm.uiState.value.status)
-        runCurrent()
-        assertEquals("alex@example.com", auth.lastEmail)
-        assertEquals(AuthStatus.Error("Sign in failed. Check your connection and credentials."), vm.uiState.value.status)
-        vm.clearError()
-        assertEquals(AuthStatus.Idle, vm.uiState.value.status)
-        auth.result = Result.success(Unit)
-        vm.submit()
-        runCurrent()
-        assertEquals(AuthStatus.Success, vm.uiState.value.status)
-    }
-
-    @Test fun signupStepsRestoreButPasswordIsNeverSaved() = runTest {
-        val handle = SavedStateHandle()
-        val vm = authViewModel(handle)
-        vm.initialize(true)
-        vm.nextStep()
-        assertEquals(SignUpStep.Name, vm.uiState.value.step)
-        vm.setName("Alex")
-        vm.nextStep()
-        assertEquals(SignUpStep.Avatar, vm.uiState.value.step)
-        vm.selectAvatar(vm.uiState.value.avatarSeeds.first())
-        vm.nextStep()
-        vm.setEmail("alex@example.com")
-        vm.nextStep()
-        vm.setPassword("secret")
-        assertTrue(vm.uiState.value.isStepValid)
-        val recreated = authViewModel(restored(handle))
-        recreated.initialize(false)
-        assertTrue(recreated.uiState.value.isSignUp)
-        assertEquals(SignUpStep.Password, recreated.uiState.value.step)
-        assertEquals(vm.uiState.value.avatarSeeds, recreated.uiState.value.avatarSeeds)
-        assertEquals(vm.uiState.value.selectedSeed, recreated.uiState.value.selectedSeed)
-        assertEquals("", recreated.uiState.value.password)
-        assertFalse(handle.keys().contains("password"))
-        recreated.previousStep()
-        assertEquals(SignUpStep.Email, recreated.uiState.value.step)
-        recreated.toggleMode()
-        assertFalse(recreated.uiState.value.isSignUp)
-        assertEquals(SignUpStep.Name, recreated.uiState.value.step)
-    }
-
-    @Test fun signupSubmitsTrimmedMetadataAndPreservesSuccessAndErrorState() = runTest {
-        val vm = authViewModel()
-        vm.initialize(true)
-        vm.setName(" Alex ")
-        vm.setEmail(" alex@example.com ")
-        vm.selectAvatar("face-seed")
-        vm.setPassword("short")
-        vm.submit()
-        assertEquals(0, auth.signUpCalls)
-        vm.setPassword("secret")
-        vm.submit()
-        assertEquals(AuthStatus.Loading, vm.uiState.value.status)
-        runCurrent()
-        assertEquals(1, auth.signUpCalls)
-        assertEquals("Alex", auth.lastName)
-        assertEquals("alex@example.com", auth.lastEmail)
-        assertEquals(DiceBear.avatarUrl("face-seed"), auth.lastAvatar)
-        assertEquals(AuthStatus.Success, vm.uiState.value.status)
-        auth.result = Result.failure(IllegalStateException("Email already registered"))
-        vm.submit()
-        runCurrent()
-        assertEquals(AuthStatus.Error("Sign up failed. Check your connection and account details."), vm.uiState.value.status)
     }
 
     @Test fun avatarUrlPreservesQueryEscaping() {

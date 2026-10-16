@@ -14,9 +14,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavDestination.Companion.hasRoute
-import androidx.navigation.toRoute
-import com.shkurta.pickle.ui.auth.AuthScreen
-import com.shkurta.pickle.ui.auth.AuthViewModel
+import com.shkurta.pickle.ui.auth.LoginScreen
+import com.shkurta.pickle.ui.auth.RegisterScreen
+import com.shkurta.pickle.ui.auth.SessionViewModel
 import com.shkurta.pickle.ui.create.CreatePollScreen
 import com.shkurta.pickle.ui.home.HomeScreen
 import com.shkurta.pickle.ui.menu.MenuScreen
@@ -27,9 +27,9 @@ import com.shkurta.pickle.ui.poll.PollScreen
 @Composable
 fun AppNavigation(
     navController: NavHostController = rememberNavController(),
-    authViewModel: AuthViewModel = hiltViewModel(),
+    sessionViewModel: SessionViewModel = hiltViewModel(),
 ) {
-    val session by authViewModel.session.collectAsStateWithLifecycle()
+    val session by sessionViewModel.session.collectAsStateWithLifecycle()
     var previousUserId by rememberSaveable { mutableStateOf<String?>(null) }
     if (!session.initialized) {
         androidx.compose.foundation.layout.Box(
@@ -39,16 +39,10 @@ fun AppNavigation(
         return
     }
     val openCreate: () -> Unit = {
-        navController.navigate(if (session.userId == null) Screen.Auth() else Screen.CreatePoll())
+        navController.navigate(if (session.userId == null) Screen.Login else Screen.CreatePoll())
     }
     LaunchedEffect(session) {
-        val destination = navController.currentDestination
-        val atEntry = destination?.hasRoute<Screen.Onboarding>() == true || destination?.hasRoute<Screen.Auth>() == true
-        when (authRedirect(previousUserId, session.userId, atEntry)) {
-            AuthRedirect.HOME -> navController.navigate(Screen.Home) { popUpTo(0) { inclusive = true } }
-            AuthRedirect.ONBOARDING -> navController.navigate(Screen.Onboarding) { popUpTo(0) { inclusive = true } }
-            AuthRedirect.NONE -> Unit
-        }
+        navController.applyAuthRedirect(authRedirect(previousUserId, session.userId, navController.currentDestination.isAuthEntry()))
         previousUserId = session.userId
     }
 
@@ -66,7 +60,7 @@ fun AppNavigation(
         ) {
             OnboardingScreen(
                 onCreateAccount = {
-                    navController.navigate(Screen.Auth(signUp = true))
+                    navController.navigate(Screen.Register)
                 },
                 onTryIt = {
                     navController.navigate(Screen.Home) {
@@ -74,22 +68,31 @@ fun AppNavigation(
                     }
                 },
                 onLogIn = {
-                    navController.navigate(Screen.Auth(signUp = false))
+                    navController.navigate(Screen.Login)
                 },
             )
         }
-        composable<Screen.Auth> { backStackEntry ->
-            val route = backStackEntry.toRoute<Screen.Auth>()
-            AuthScreen(
-                initialSignUp = route.signUp,
+        composable<Screen.Login> {
+            LoginScreen(
                 onBack = { navController.popBackStack() },
+                onRegister = {
+                    navController.switchAuthScreen(Screen.Register)
+                },
+            )
+        }
+        composable<Screen.Register> {
+            RegisterScreen(
+                onBack = { navController.popBackStack() },
+                onLogin = {
+                    navController.switchAuthScreen(Screen.Login)
+                },
             )
         }
         composable<Screen.Home>(
             // Arriving from onboarding/auth replaces the whole back stack, so fade rather than slide
             enterTransition = {
                 val fromRoot = initialState.destination.hasRoute<Screen.Onboarding>() ||
-                    initialState.destination.hasRoute<Screen.Auth>()
+                    initialState.destination.hasRoute<Screen.Login>() || initialState.destination.hasRoute<Screen.Register>()
                 if (fromRoot) fadeThroughEnter() else sharedAxisEnter()
             },
         ) {
@@ -99,13 +102,13 @@ fun AppNavigation(
                 onNotificationsClick = { navController.navigate(Screen.Notifications) },
                 onMenuClick = { navController.navigate(Screen.Menu) },
                 onTemplatesClick = { navController.navigate(Screen.Templates) },
-                onStarterClick = { starter -> navController.navigate(if(session.userId==null) Screen.Auth() else Screen.CreatePoll(starterId=starter)) }
+                onStarterClick = { starter -> navController.navigate(if(session.userId==null) Screen.Login else Screen.CreatePoll(starterId=starter)) }
             )
         }
         composable<Screen.Templates> {
             com.shkurta.pickle.ui.templates.TemplatesScreen(
                 onBack={navController.popBackStack()},
-                onUse={starter,template -> navController.navigate(if(session.userId==null) Screen.Auth() else Screen.CreatePoll(starter,template))},
+                onUse={starter,template -> navController.navigate(if(session.userId==null) Screen.Login else Screen.CreatePoll(starter,template))},
             )
         }
         composable<Screen.CreatePoll>(
@@ -126,7 +129,7 @@ fun AppNavigation(
             PollScreen(
                 onTemplateSaved = { navController.navigate(Screen.Templates) },
                 isDemo = session.userId == null,
-                onSignIn = { navController.navigate(Screen.Auth()) },
+                onSignIn = { navController.navigate(Screen.Login) },
                 onBack = { navController.popBackStack() }
             )
         }

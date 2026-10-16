@@ -34,4 +34,18 @@
     <string name="sign_up_email_subtitle">Use this email to log in to Pickle.</string>
     <string name="sign_up_password_title">Create a password</string>
     <string name="sign_up_password_subtitle">Choose a password with at least 6 characters.</string>
+    <string name="auth_details_title">Account details</string>
+    <string name="auth_details_subtitle">A few details, then a face to make it yours.</string>
+    <string name="auth_name_label">Your name</string>
+    <string name="auth_name_required">Enter the name your friends know you by.</string>
+    <string name="auth_email_placeholder">you@example.com</string>
+    <string name="auth_email_invalid">Enter a valid email address.</string>
+    <string name="auth_password_required">Enter your password.</string>
+    <string name="auth_password_short">Use at least 6 characters.</string>
+    <string name="auth_password_hint">At least 6 characters.</string>
+    <string name="auth_avatar_required">Choose an avatar to create your account.</string>
+    <string name="auth_login_failed">Couldn’t log in. Check your connection and credentials, then try again.</string>
+    <string name="auth_register_failed">Couldn’t create your account. Check your connection and account details, then try again.</string>
+    <string name="auth_success">Details accepted. If email confirmation is required, check your inbox before logging in.</string>
+    <string name="auth_login_success">You’re logged in. Opening your polls…</string>
 </resources>
