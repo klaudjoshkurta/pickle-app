@@ -1,6 +1,7 @@
 package com.shkurta.pickle.ui.home
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -19,6 +21,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Badge
 import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.CircularProgressIndicator
@@ -34,6 +37,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -323,8 +328,13 @@ private fun HomeSectionLabel(
 
 @Composable
 private fun FirstPollSteps() {
-    PickleCard {
+    val dividerColor = Pickle.colors.lineSoft
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(24.dp)
+    ) {
         Column(
+            modifier = Modifier.fillMaxWidth().padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(18.dp)
         ) {
             listOf(
@@ -332,14 +342,24 @@ private fun FirstPollSteps() {
                 stringResource(R.string.add_options_step) to stringResource(R.string.template_step),
                 stringResource(R.string.share_link_step) to stringResource(R.string.friends_vote_step)
             ).forEachIndexed { index, pair ->
+                if (index > 0) {
+                    Canvas(Modifier.fillMaxWidth().height(2.dp)) {
+                        drawLine(
+                            color = dividerColor,
+                            start = Offset(0f, size.height / 2),
+                            end = Offset(size.width, size.height / 2),
+                            strokeWidth = 2.dp.toPx(),
+                            pathEffect = PathEffect.dashPathEffect(floatArrayOf(8.dp.toPx(), 5.dp.toPx())),
+                        )
+                    }
+                }
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Surface(
-                        color = if (index == 0) Pickle.colors.mustard else Pickle.colors.surface,
+                        color = Pickle.colors.mustard,
                         shape = CircleShape,
-                        border = BorderStroke(1.5.dp, Pickle.colors.lineStrong)
                     ) {
                         Box(
                             modifier = Modifier.size(30.dp),
