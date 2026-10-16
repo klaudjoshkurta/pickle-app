@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
@@ -40,16 +41,16 @@ internal fun AuthLayout(onBack: () -> Unit, loading: Boolean, scrollKey: Any = U
     BackHandler(enabled = loading) { /* Keep a pending request attached to its screen. */ }
     Scaffold(modifier = Modifier.imePadding(), topBar = {
         TopAppBar(title = {}, navigationIcon = {
-            IconButton(onClick = onBack, enabled = !loading, modifier = Modifier.padding(start = 8.dp).size(48.dp)) {
-                Icon(painterResource(R.drawable.ic_arrow_back), stringResource(R.string.back_button_cd))
+            IconButton(onClick = onBack, enabled = !loading,
+                modifier = Modifier.padding(start = 8.dp).size(48.dp).background(Color.White, CircleShape)) {
+                Icon(painterResource(R.drawable.ic_arrow_back), stringResource(R.string.back_button_cd),
+                    tint = Color(0xFF242424))
             }
         }, colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background))
     }) { padding ->
         Box(Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.TopCenter) {
             Column(Modifier.widthIn(max = 480.dp).fillMaxWidth().verticalScroll(scrollState)
                 .padding(horizontal = 24.dp).padding(top = 16.dp, bottom = 32.dp)) {
-                PickleBrand()
-                Spacer(Modifier.height(32.dp))
                 content()
             }
         }
